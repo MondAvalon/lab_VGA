@@ -29,7 +29,7 @@ module DisplayDataProcessor #(
     input [11:0] read_data, //读取的像素数据
 
     output reg [          11:0] rgb_out,   //RGB输出
-    output reg [ADDR_WIDTH-1:0] read_addr  //读地址
+    output reg [ADDR_WIDTH-1:0] read_addr  //读vram地址
 );
 
   localparam total_pixels = H_LENGTH * V_LENGTH;  // 总像素数

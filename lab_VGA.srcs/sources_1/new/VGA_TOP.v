@@ -1,5 +1,5 @@
 module VGA_TOP (
-    input [0 : 0] CLK100MHZ,
+    input [0 : 0] CLK100MHZ,  // 100_000_000 MHz
     input [0 : 0] CPU_RESETN,
 
     output [0 : 0] VGA_HS,
@@ -35,7 +35,18 @@ module VGA_TOP (
       .b (VGA_B)
   );
 
+  //1秒计数器
+  reg [31:0] count;
+  Counter #(32, 100_000_000) counter_inst (
+      .clk(CLK100MHZ),
+      .rstn(CPU_RESETN),
+      .load_value(100_000_000),
+      .enable(1'b1),
+      .count(count)
+  );
+
   always @(posedge CLK100MHZ) begin
+    //每秒更新一次颜色
 
 
   end

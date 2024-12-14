@@ -9,6 +9,7 @@ module VGA #(
     input [ 0 : 0] clk,
     input [ 0 : 0] rstn,   // 复位信号,低有效
 
+    output [ADDR_WIDTH-1:0] raddr,  // 读地址
     output [0 : 0] hs,  // 水平显示同步
     output [0 : 0] vs,  // 垂直显示同步
     output [3 : 0] r,
@@ -22,7 +23,7 @@ module VGA #(
   // 添加缺失的信号定义
   reg         ena = 1'b1;  // 端口A使能信号
   reg         enb = 1'b1;  // 端口B使能信号
-  wire [14:0] raddr;  // 读地址
+
   wire [11:0] rdata;  // 读出的数据
   wire [11:0] rgb_out;  // RGB输出信号
 
