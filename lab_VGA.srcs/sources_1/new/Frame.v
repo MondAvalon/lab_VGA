@@ -5,22 +5,83 @@ module FrameGenerator #(
     parameter V_LENGTH   = 150
 ) (
     input clk,
-    input pclk,
+    input frame_clk,
     input rstn,
-    input [ADDR_WIDTH-1:0] read_addr,  //读vram地址，转换为坐标
+    input [ADDR_WIDTH-1:0] raddr,
+    //input in-game x, y, priority, color 
 
-    output [3 : 0] r,
-    output [3 : 0] g,
-    output [3 : 0] b
+    output [11:0] rdata
 );
 
-wire [$clog2(H_LENGTH)-1:0] x;
-wire [$clog2(V_LENGTH)-1:0] y;
+  reg [$clog2(H_LENGTH)-1:0] render_x;
+  reg [$clog2(V_LENGTH)-1:0] render_y;
+  wire [ADDR_WIDTH-1:0] waddr;
+  reg [11:0] wdata;
+  reg we;  //写使能
+  reg generating;
 
-assign x = read_addr % H_LENGTH;
-assign y = read_addr / H_LENGTH;
+  initial begin
+    render_x   = 0;
+    render_y   = 0;
+    generating = 0;
+  end
+
+  vram_bram vram_inst (
+      .clka (clk),
+      .ena  (1'b1),
+      .wea  (we),
+      .addra(waddr),
+      .dina (wdata),
+
+      .clkb (clk),
+      .enb  (1'b1),
+      .addrb(raddr),
+      .doutb(rdata)
+  );
+
+  assign waddr = render_y * H_LENGTH + render_x; // 由坐标生成需要写入vram的地址
+
+  always @(posedge frame_clk) begin
+      generating <= 1;
+  end
+
+  always @(posedge clk) begin
+    if (!rstn) begin
+      render_x   <= 0;
+      render_y   <= 0;
+      generating <= 0;
+    end else if (generating) begin
+      render_x <= render_x + 1;
+      if (render_x == H_LENGTH - 1) begin
+        render_x <= 0;
+        render_y <= render_y + 1;
+        if (render_y == V_LENGTH - 1) begin
+          render_y   <= 0;
+          generating <= 0;
+        end
+      end
+    end else begin
+      render_x   <= render_x;
+      render_y   <= render_y;
+      generating <= generating;
+    end
+  end
+
+  always @(posedge clk) begin
+    if (!rstn) begin
+      we    <= 0;
+      wdata <= 0;
+    end else if (generating) begin
+      we    <= 1;
+      // in-game object color update logic
+      // wdata <= in-game object color;
 
 
+    end else begin
+      we    <= 0;
+      wdata <= 0;
+    end
+  end
 
 
 endmodule
