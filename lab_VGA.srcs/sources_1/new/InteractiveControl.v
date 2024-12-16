@@ -52,9 +52,7 @@ module Controllor #(
       //in-game .x, .y, .priority, .color
 
 
-      .rdata (rdata),
-      .vga_hs(VGA_HS),
-      .vga_vs(VGA_VS)
+      .rdata (rdata)
   );
 
 // 显示

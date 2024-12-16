@@ -19,14 +19,14 @@ module TOP (
   wire [127:0] key_state;
 
   //Keyboard
-  Keyboard keyboard (
-      .clk(CLK100MHZ),
-      .rstn(CPU_RESETN),
-      .ps2_clk(PS2_CLK),
-      .ps2_data(PS2_DATA),
-      .key_event(key_event),
-      .key_state(key_state)
-  );
+//   Keyboard keyboard (
+//       .clk(CLK100MHZ),
+//       .rstn(CPU_RESETN),
+//       .ps2_clk(PS2_CLK),
+//       .ps2_data(PS2_DATA),
+//       .key_event(key_event),
+//       .key_state(key_state)
+//   );
 
   //Controllor
   Controllor #(
