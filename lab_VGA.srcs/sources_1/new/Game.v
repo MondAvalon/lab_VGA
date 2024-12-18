@@ -2,9 +2,13 @@ module Game (
     input clk,
     input rstn,
     input frame_clk,
-    input [10:0] key_event,
-    input [127:0] key_state
-    
+
+    // 游戏键盘输入
+    input left,
+    input right,
+    input shoot,
+    input space
+
     // output in-game object x, y, priority, color
 );
 endmodule
