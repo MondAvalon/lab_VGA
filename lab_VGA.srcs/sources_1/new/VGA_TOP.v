@@ -8,7 +8,9 @@ module TOP (
     output VGA_VS,
     output [3 : 0] VGA_R,
     output [3 : 0] VGA_G,
-    output [3 : 0] VGA_B
+    output [3 : 0] VGA_B,
+    output AUD_PWM,
+    output AUD_SD
 );
 
   localparam H_LENGTH = 200;
@@ -18,15 +20,26 @@ module TOP (
   wire [10:0] key_event;
   wire [127:0] key_state;
 
-  //Keyboard
+  // Keyboard
 //   Keyboard keyboard (
 //       .clk(CLK100MHZ),
 //       .rstn(CPU_RESETN),
-//       .ps2_clk(PS2_CLK),
-//       .ps2_data(PS2_DATA),
-//       .key_event(key_event),
-//       .key_state(key_state)
+//       .ps2_c(PS2_CLK),
+//       .ps2_d(PS2_DATA),
+//       .key_event(key_event)
 //   );
+
+  //Audio
+  Audio audio (
+      .clk(CLK100MHZ),
+      .rstn(CPU_RESETN),
+      .start(1),
+      .speed_control(0),
+
+      .audio_pwm(AUD_PWM)
+  );
+
+  assign AUD_SD = 1'b1;
 
   //Controllor
   Controllor #(

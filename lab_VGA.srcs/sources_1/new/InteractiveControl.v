@@ -21,7 +21,7 @@ module Controllor #(
 
 
   // 像素时钟
-  pclk pclk_inst (
+  pclk pixel_clock_inst (
       .clk_out1(pclk),
       .reset   (~rstn),
       //   .locked  (locked),
@@ -29,7 +29,7 @@ module Controllor #(
   );
 
   // 游戏逻辑
-  Game game (
+  Game game_logic_inst (
       .clk(clk),
       .frame_clk(VGA_VS),
       .rstn(rstn),
@@ -44,7 +44,7 @@ module Controllor #(
       .ADDR_WIDTH(ADDR_WIDTH),
       .H_LENGTH  (H_LENGTH),
       .V_LENGTH  (V_LENGTH)
-  ) frame (
+  ) frame_gen_inst (
       .clk(clk),
       .frame_clk(VGA_VS),
       .rstn(rstn),
@@ -60,7 +60,7 @@ DisplayUnit #(
     .ADDR_WIDTH(ADDR_WIDTH),
     .H_LENGTH  (H_LENGTH),
     .V_LENGTH  (V_LENGTH)
-) du (
+) display_unit_inst (
     .rstn(rstn),
     .pclk(pclk),
     .rdata(rdata),

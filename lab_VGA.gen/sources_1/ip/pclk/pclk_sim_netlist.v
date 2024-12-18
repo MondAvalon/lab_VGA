@@ -2,7 +2,7 @@
 // Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 // --------------------------------------------------------------------------------
 // Tool Version: Vivado v.2024.1.2 (win64) Build 5164865 Thu Sep  5 14:37:11 MDT 2024
-// Date        : Tue Dec  3 22:15:31 2024
+// Date        : Wed Dec 18 11:57:59 2024
 // Host        : LAPTOP-AVALON running 64-bit major release  (build 9200)
 // Command     : write_verilog -force -mode funcsim
 //               c:/Users/Lenovo/Documents/Codes/verilog/lab_VGA/lab_VGA.gen/sources_1/ip/pclk/pclk_sim_netlist.v
