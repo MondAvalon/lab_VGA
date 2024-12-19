@@ -23,6 +23,8 @@ module Controllor #(
 
   wire left, right, shoot, space;
 
+  wire [11:0] background_rgb;
+
 
   // 像素时钟
   pclk pixel_clock_inst (
@@ -49,11 +51,13 @@ module Controllor #(
       .frame_clk(VGA_VS),
       .rstn(rstn),
       .left(left),
+      .raddr(raddr),
       .right(right),
       .shoot(shoot),
-      .space(space)
+      .space(space),
 
       // output in-game object x, y, priority, color
+      .background_rgb(background_rgb)
   );
 
   // 帧生成
@@ -66,8 +70,9 @@ module Controllor #(
       .frame_clk(VGA_VS),
       .rstn(rstn),
       .raddr(raddr),
-      //in-game .x, .y, .priority, .color
-
+      
+      //input in-game .x, .y, .priority, .color
+      .background_rgb(background_rgb),
 
       .rdata(rdata)
   );

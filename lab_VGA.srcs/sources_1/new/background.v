@@ -31,7 +31,7 @@ module background #(
 
   assign scroll_addr = addr + offset;
 
-  Rom_Background background (
+  Rom_Backgroud background (
       .clka (clk),
       .ena  (enable),
       .addra(scroll_addr),

@@ -1,256 +1,272 @@
 module Keyboard (
-    input clk,
-    input rst,
-
-    // UART port
-    inout USB_CLOCK,
-    inout USB_DATA,
-
-    // UART port
-    input      RXD,
-    output reg TXD,
-    output reg CTS,
-    input      RTS,
-
-    // PS2输出端口
-    output       PS2_valid,   // PS2数据有效信号
-    output [7:0] PS2_data_in  // PS2数据
+    clk,
+    rst_n,
+    ps2k_clk,
+    ps2k_data,
+    sm_bit,
+    sm_seg,
+    ps2_state
 );
 
-  // USB ports control
-  wire USB_CLOCK_OE;
-  wire USB_DATA_OE;
-  wire USB_CLOCK_out;
-  wire USB_CLOCK_in;
-  wire USB_DATA_out;
-  wire USB_DATA_in;
-  assign USB_CLOCK = (USB_CLOCK_OE) ? USB_CLOCK_out : 1'bz;
-  assign USB_DATA = (USB_DATA_OE) ? USB_DATA_out : 1'bz;
-  assign USB_CLOCK_in = USB_CLOCK;
-  assign USB_DATA_in = USB_DATA;
-
-  // wire       PS2_valid;
-  // wire [7:0] PS2_data_in;
-  wire       PS2_busy;
-  wire       PS2_error;
-  wire       PS2_complete;
-  reg        PS2_enable;
-  (* dont_touch = "true" *)reg  [7:0] PS2_data_out;
-  // Controller for the PS2 port
-  // Transfer parallel 8-bit data into serial, or receive serial to parallel
-  ps2_transmitter ps2_transmitter (
-      .clk(clk),
-      .rst(rst),
-
-      .clock_in(USB_CLOCK_in),
-      .serial_data_in(USB_DATA_in),
-      .parallel_data_in(PS2_data_in),
-      .parallel_data_valid(PS2_valid),
-      .busy(PS2_busy),
-      .data_in_error(PS2_error),
-
-      .clock_out(USB_CLOCK_out),
-      .serial_data_out(USB_DATA_out),
-      .parallel_data_out(PS2_data_out),
-      .parallel_data_enable(PS2_enable),
-      .data_out_complete(PS2_complete),
-
-      .clock_output_oe(USB_CLOCK_OE),
-      .data_output_oe (USB_DATA_OE)
-  );
-  // Output the data to uart
-  reg [15:0] tx_count;
-  reg [19:0] tx_shift;
-  reg [19:0] CTS_delay;
-  reg        rx_start;
-
-  always @(posedge clk or posedge rst) begin
-    if (rst) begin
-      tx_count <= 16'd0;
-      TXD <= 1'b1;
-      tx_shift <= 20'd0;
-      CTS <= 1'b1;
-      CTS_delay <= 20'hFFFFF;
-    end  // When get data from PS2, transfer and buffer it into register
-    else if (PS2_valid) begin
-      case (PS2_data_in[3:0])
-        4'h0: begin
-          tx_shift[9:0] <= 10'b0000011001;
-        end
-        4'h1: begin
-          tx_shift[9:0] <= 10'b0100011001;
-        end
-        4'h2: begin
-          tx_shift[9:0] <= 10'b0010011001;
-        end
-        4'h3: begin
-          tx_shift[9:0] <= 10'b0110011001;
-        end
-        4'h4: begin
-          tx_shift[9:0] <= 10'b0001011001;
-        end
-        4'h5: begin
-          tx_shift[9:0] <= 10'b0101011001;
-        end
-        4'h6: begin
-          tx_shift[9:0] <= 10'b0011011001;
-        end
-        4'h7: begin
-          tx_shift[9:0] <= 10'b0111011001;
-        end
-        4'h8: begin
-          tx_shift[9:0] <= 10'b0000111001;
-        end
-        4'h9: begin
-          tx_shift[9:0] <= 10'b0100111001;
-        end
-        4'hA: begin
-          tx_shift[9:0] <= 10'b0100000101;
-        end
-        4'hB: begin
-          tx_shift[9:0] <= 10'b0010000101;
-        end
-        4'hC: begin
-          tx_shift[9:0] <= 10'b0110000101;
-        end
-        4'hD: begin
-          tx_shift[9:0] <= 10'b0001000101;
-        end
-        4'hE: begin
-          tx_shift[9:0] <= 10'b0101000101;
-        end
-        4'hF: begin
-          tx_shift[9:0] <= 10'b0011000101;
-        end
-      endcase
-
-      case (PS2_data_in[7:4])
-        4'h0: begin
-          tx_shift[19:10] <= 10'b0000011001;
-        end
-        4'h1: begin
-          tx_shift[19:10] <= 10'b0100011001;
-        end
-        4'h2: begin
-          tx_shift[19:10] <= 10'b0010011001;
-        end
-        4'h3: begin
-          tx_shift[19:10] <= 10'b0110011001;
-        end
-        4'h4: begin
-          tx_shift[19:10] <= 10'b0001011001;
-        end
-        4'h5: begin
-          tx_shift[19:10] <= 10'b0101011001;
-        end
-        4'h6: begin
-          tx_shift[19:10] <= 10'b0011011001;
-        end
-        4'h7: begin
-          tx_shift[19:10] <= 10'b0111011001;
-        end
-        4'h8: begin
-          tx_shift[19:10] <= 10'b0000111001;
-        end
-        4'h9: begin
-          tx_shift[19:10] <= 10'b0100111001;
-        end
-        4'hA: begin
-          tx_shift[19:10] <= 10'b0100000101;
-        end
-        4'hB: begin
-          tx_shift[19:10] <= 10'b0010000101;
-        end
-        4'hC: begin
-          tx_shift[19:10] <= 10'b0110000101;
-        end
-        4'hD: begin
-          tx_shift[19:10] <= 10'b0001000101;
-        end
-        4'hE: begin
-          tx_shift[19:10] <= 10'b0101000101;
-        end
-        4'hF: begin
-          tx_shift[19:10] <= 10'b0011000101;
-        end
-      endcase
-
-      CTS_delay <= 20'h00000;
-    end  // When receiving data, output the same thing in the meantime
-    else if ((~RXD) || rx_start) begin
-      TXD <= RXD;
-      CTS <= 1'b0;
-    end  // Shift out the received data
-    else begin
-      if (tx_count < 16'd867) begin
-        tx_count <= tx_count + 16'd1;
-      end else begin
-        tx_count <= 16'd0;
-      end
-
-      if (tx_count == 16'd0) begin
-        TXD <= tx_shift[19];
-        tx_shift <= {tx_shift[18:0], 1'b1};
-        CTS <= CTS_delay[19];
-        CTS_delay <= {CTS_delay[18:0], 1'b1};
-      end
-    end
-  end
-  // Input from uart
-  (* dont_touch = "true" *)reg [ 7:0] RXD_delay;
-  reg [15:0] rx_count;
-  (* dont_touch = "true" *)reg [ 3:0] rx_bit_count;
-
-
-  always @(posedge clk or posedge rst) begin
-    if (rst) begin
-      RXD_delay <= 8'h00;
-      rx_count <= 16'd0;
-      rx_bit_count <= 4'd0;
-      PS2_enable <= 1'b0;
-      rx_start <= 1'b0;
-    end else if (~RTS) begin
-      if (rx_count < 16'd867) begin
-        rx_count <= rx_count + 16'd1;
-      end else begin
-        rx_count <= 16'd0;
-      end
-
-      if ((rx_count == 16'd0) && (~RXD) && (~rx_start)) begin
-        RXD_delay <= 8'h00;
-        rx_bit_count <= 4'd0;
-        rx_start <= 1'b1;
-      end else if ((rx_count == 16'd0) && rx_start && (rx_bit_count != 4'd8)) begin
-        rx_bit_count <= rx_bit_count + 4'd1;
-        RXD_delay <= {RXD_delay[6:0], RXD};
-      end else if ((rx_count == 16'd0) && rx_start) begin
-        rx_start <= 1'b0;
-        rx_bit_count <= 4'd0;
-        PS2_enable <= 1'b1;
-        case (RXD_delay[7:0])
-          8'b00001100: begin
-            PS2_data_out <= 8'hFF;
-          end  // Reset
-          8'b10001100: begin
-            PS2_data_out <= 8'hED;
-          end  // Set status LED
-          8'b01001100: begin
-            PS2_data_out <= 8'h07;
-          end  // LED byte
-          8'b11001100: begin
-            PS2_data_out <= 8'hEE;
-          end  // Echo
-          8'b00101100: begin
-            PS2_data_out <= 8'hFE;
-          end  // Resend
-          default: begin
-            PS2_data_out <= 8'hEE;
-          end
-        endcase
-      end else begin
-        PS2_enable <= 1'b0;
-      end
+  input clk;  //100M时钟信号
+  input rst_n;  //复位信号
+  input ps2k_clk;  //PS2接口时钟信号
+  input ps2k_data;  //PS2接口数据信号
+  wire [7:0] ps2_byte;  // 1byte键值，只做简单的按键扫描
+  output ps2_state;  //键盘当前状态，ps2_state=1表示有键被按下 
+  output reg [1:0] sm_bit = 'b01; //数码管显示位选择
+  output reg [7:0] sm_seg; //数码管显示值
+  //------------------------------------------
+  reg ps2k_clk_r0, ps2k_clk_r1, ps2k_clk_r2;  //ps2k_clk状态寄存器
+  //wire pos_ps2k_clk; 	// ps2k_clk上升沿标志位
+  wire neg_ps2k_clk;  // ps2k_clk下降沿标志位
+  //设备发送向主机的数据在下降沿有效，首先检测PS2k_clk的下降沿
+  //利用上面逻辑赋值语句可以提取得下降沿，neg_ps2k_clk为高电平时表示数据可以被采集
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      ps2k_clk_r0 <= 1'b0;
+      ps2k_clk_r1 <= 1'b0;
+      ps2k_clk_r2 <= 1'b0;
+    end else begin  //锁存状态，进行滤波
+      ps2k_clk_r0 <= ps2k_clk;
+      ps2k_clk_r1 <= ps2k_clk_r0;
+      ps2k_clk_r2 <= ps2k_clk_r1;
     end
   end
 
+  assign neg_ps2k_clk = ~ps2k_clk_r1 & ps2k_clk_r2;  //下降沿
+
+  //-----------------数据采集-------------------------
+  /*
+	帧结构：设备发往主机数据帧为11比特，（主机发送数据包为12bit） 
+			1bit start bit ,This is always 0,
+			 8bit data bits, 
+			 1 parity bit,(odd parity)校验位，奇校验，
+			 data bits 为偶数个1时该位为1，
+			 data bits 为奇数个1时该位为0.
+	         1bit stop bit ,this is always 1.
+				num 范围为 'h00,'h0A;
+	*/
+  reg [7:0] ps2_byte_r;  //PC接收来自PS2的一个字节数据存储器
+  reg [7:0] temp_data;  //当前接收数据寄存器
+  reg [3:0] num;  //计数寄存器
+
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      num <= 4'd0;
+      temp_data <= 8'd0;
+    end else if (neg_ps2k_clk) begin  //检测到ps2k_clk的下降沿
+      case (num)
+        /*
+		帧结构中数据位为一个字节，且低位在前，高位在后，
+		这里要定义一个buf,size is one Byte.
+	 */
+        4'd0: num <= num + 1'b1;
+        4'd1: begin
+          num <= num + 1'b1;
+          temp_data[0] <= ps2k_data;  //bit0
+        end
+        4'd2: begin
+          num <= num + 1'b1;
+          temp_data[1] <= ps2k_data;  //bit1
+        end
+        4'd3: begin
+          num <= num + 1'b1;
+          temp_data[2] <= ps2k_data;  //bit2
+        end
+        4'd4: begin
+          num <= num + 1'b1;
+          temp_data[3] <= ps2k_data;  //bit3
+        end
+        4'd5: begin
+          num <= num + 1'b1;
+          temp_data[4] <= ps2k_data;  //bit4
+        end
+        4'd6: begin
+          num <= num + 1'b1;
+          temp_data[5] <= ps2k_data;  //bit5
+        end
+        4'd7: begin
+          num <= num + 1'b1;
+          temp_data[6] <= ps2k_data;  //bit6
+        end
+        4'd8: begin
+          num <= num + 1'b1;
+          temp_data[7] <= ps2k_data;  //bit7
+        end
+        4'd9: begin
+          num <= num + 1'b1;  //奇偶校验位，不做处理
+        end
+        4'd10: begin
+          num <= 4'd0;  // num清零
+        end
+        default: ;
+      endcase
+    end
+  end
+
+  reg key_f0;		//松键标志位，置1表示接收到数据8'hf0，再接收到下一个数据后清零
+  reg ps2_state_r;  //键盘当前状态，ps2_state_r=1表示有键被按下 
+  //+++++++++++++++数据处理开始++++++++++++++++=============
+  always @ (posedge clk or negedge rst_n) begin	//接收数据的相应处理，这里只对1byte的键值进行处理
+    if (!rst_n) begin
+      key_f0 <= 1'b0;
+      ps2_state_r <= 1'b0;
+    end
+	else if(num==4'd10) ///一帧数据是否采集完。
+			begin	//刚传送完一个字节数据
+      if (temp_data == 8'hf0) key_f0 <= 1'b1;  //判断该接收数据是否为断码
+      else begin
+        //========================理解困难==================================
+        if (!key_f0) begin  //说明有键按下
+          ps2_state_r <= 1'b1;
+          ps2_byte_r  <= temp_data;  //锁存当前键值
+        end else begin
+          ps2_state_r <= 1'b0;
+          key_f0 <= 1'b0;
+        end
+        //=====================================================
+      end
+    end
+  end
+  /*+++++++++++++等效写法+++++++++++++++++++++++++++++
+reg key_released;//收到码段后是否松开
+reg [7:0] ps2_byte;
+always @(posedge clk or negedge rst)
+begin
+	if(!rst)
+	 key_released<='b0;
+	else if(cnt=='h0A)//一帧数据是否采集完。
+		begin
+			if(ps2_byte_buf==8'hF0)//数据为段码f0
+				key_released<='b1;//松开标志位置位
+			else
+				key_released<='b0;
+		end
+end
+always @ (posedge clk or negedge rst) 
+begin             
+  if(!rst)
+    key_pressed<= 0;
+  else if (cnt == 4'hA)                 // 采集完一个字节？ 
+  begin      
+    if (!key_released)                  // 有键按过？
+    begin 
+      ps2_byte<= ps2_byte_buf;      // 锁存当前键值
+      key_pressed <= 'b1;                 // 按下标志置一
+    end
+    else 
+      key_pressed <= 'b0;                 // 按下标志清零
+  end
+end 
+*/
+
+  reg [7:0] ps2_asci;  //接收数据的相应ASCII码
+
+  always @(ps2_byte_r) begin
+    case (ps2_byte_r)  //键值转换为ASCII码，这里做的比较简单，只处理字母
+      8'h15:   ps2_asci <= 8'h51;  //Q
+      8'h1d:   ps2_asci <= 8'h57;  //W
+      8'h24:   ps2_asci <= 8'h45;  //E
+      8'h2d:   ps2_asci <= 8'h52;  //R
+      8'h2c:   ps2_asci <= 8'h54;  //T
+      8'h35:   ps2_asci <= 8'h59;  //Y
+      8'h3c:   ps2_asci <= 8'h55;  //U
+      8'h43:   ps2_asci <= 8'h49;  //I
+      8'h44:   ps2_asci <= 8'h4f;  //O
+      8'h4d:   ps2_asci <= 8'h50;  //P				  	
+      8'h1c:   ps2_asci <= 8'h41;  //A
+      8'h1b:   ps2_asci <= 8'h53;  //S
+      8'h23:   ps2_asci <= 8'h44;  //D
+      8'h2b:   ps2_asci <= 8'h46;  //F
+      8'h34:   ps2_asci <= 8'h47;  //G
+      8'h33:   ps2_asci <= 8'h48;  //H
+      8'h3b:   ps2_asci <= 8'h4a;  //J
+      8'h42:   ps2_asci <= 8'h4b;  //K
+      8'h4b:   ps2_asci <= 8'h4c;  //L
+      8'h1a:   ps2_asci <= 8'h5a;  //Z
+      8'h22:   ps2_asci <= 8'h58;  //X
+      8'h21:   ps2_asci <= 8'h43;  //C
+      8'h2a:   ps2_asci <= 8'h56;  //V
+      8'h32:   ps2_asci <= 8'h42;  //B
+      8'h31:   ps2_asci <= 8'h4e;  //N
+      8'h3a:   ps2_asci <= 8'h4d;  //M
+      default: ;
+    endcase
+  end
+
+  assign ps2_byte  = ps2_asci;
+  assign ps2_state = ps2_state_r;
+  //==================keyboard driver part over======================
+
+  //=======================1KHz div====display part start===================	
+  parameter N2 = 50000;
+  reg clk3 = 1'b0;
+  reg [16:0] count3 = 17'd0;
+  //assign clk_out=clk3;	
+
+  always @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      count3 <= 17'd0;
+      clk3   <= 1'b0;
+    end else if (count3 < N2 - 1) begin
+      count3 <= count3 + 1'b1;
+      if (count3 < (N2 / 2 - 1)) clk3 <= 1'b0;
+      else clk3 <= 1'b1;
+    end else begin
+      count3 <= 17'd0;
+      clk3   <= 1'b0;
+    end
+  end
+  //==================state select================
+  reg [3:0] Num;
+  always @(posedge clk3) begin
+    case (sm_bit)
+      'b01: begin
+        Num <= ps2_byte[7:4];
+        sm_bit <= 'b10;
+      end
+      'b10: begin
+        Num <= ps2_byte[3:0];
+        sm_bit <= 'b01;
+      end
+      default: Num <= 'b0;
+    endcase
+    /*if(sm_bit=='b01)
+	   begin
+			Num<=ps2_byte[3:0];
+			sm_bit<='b10;
+		end
+	else if(sm_bit=='b10)
+        begin
+				Num<=ps2_byte[7:4];
+				sm_bit<='b01;
+			end
+		*/
+  end
+  //=========================================================
+  always @ (Num)//
+	begin
+    case (Num)
+      4'h0: sm_seg = 8'h3f;  // "0"
+      4'h1: sm_seg = 8'h06;  // "1"
+      4'h2: sm_seg = 8'h5b;  // "2"
+      4'h3: sm_seg = 8'h4f;  // "3"
+      4'h4: sm_seg = 8'h66;  // "4"
+      4'h5: sm_seg = 8'h6d;  // "5"//共阴极数码管表
+      4'h6: sm_seg = 8'h7d;  // "6"
+      4'h7: sm_seg = 8'h07;  // "7"
+      4'h8: sm_seg = 8'h7f;  // "8"
+      4'h9: sm_seg = 8'h6f;  // "9"
+      4'ha: sm_seg = 8'h77;  // "a"
+      4'hb: sm_seg = 8'h7c;  // "b"
+      4'hc: sm_seg = 8'h39;  // "c"
+      4'hd: sm_seg = 8'h5e;  // "d"
+      4'he: sm_seg = 8'h79;  // "e"
+      4'hf: sm_seg = 8'h71;  // "f"
+    endcase
+  end
+
+  //==============================================
 endmodule
+

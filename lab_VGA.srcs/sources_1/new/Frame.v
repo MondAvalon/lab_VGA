@@ -9,6 +9,7 @@ module FrameGenerator #(
     input rstn,
     input [ADDR_WIDTH-1:0] raddr,
     //input in-game x, y, priority, color 
+    input [11:0] background_rgb,
 
     output [11:0] rdata
 );
@@ -75,6 +76,7 @@ module FrameGenerator #(
       we    <= 1;
       // in-game object color update logic
       // wdata <= in-game object color;
+      wdata <= background_rgb;
 
 
     end else begin
