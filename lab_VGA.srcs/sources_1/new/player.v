@@ -17,7 +17,7 @@ module Player #(
     input [127:0] key_state,
     input enable_scroll,    //借用一下，实现暂停功能
     input collision,       //碰撞信号
-    input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
+    input [7:0] n,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
 
     output reg [H_LENGTH-1:0] loc_x, //x位置
     output reg [V_LENGTH-1:0] loc_y  //y位置
