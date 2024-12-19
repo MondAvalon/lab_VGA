@@ -24,10 +24,10 @@ always @(posedge frame_clk) begin
     end
     if (count_x == 0) begin  // 计数器为零，x轴移动
         if (arrow) begin
-            loc_x <= loc_x + 1;
+            loc_x <= loc_x + SPEED_X;
         end
         else begin
-            loc_x <= loc_x - 1;
+            loc_x <= loc_x - SPEED_X;
         end
     end
 end
@@ -44,7 +44,7 @@ end
 Counter #(8, 255) counter_x (// 每个frame_clk计数器减1
   .clk       (frame_clk),
   .rstn      (rstn),
-  .load_value(n - SPEED_X),
+  .load_value(n - 1),
   .enable    (enable_scroll),
   .count     (count_x)
 );

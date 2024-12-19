@@ -1,8 +1,8 @@
 // 自机模块
 module Player #(
     parameter ADDR_WIDTH = 15,
-    parameter SPEED_X = 3,
-    parameter BUNCE_V = -5,  //回弹初速度
+    parameter SPEED_X = 2,
+    parameter BUNCE_V = -2,  //回弹初速度
     parameter G_CONST = 1,  //重力加速度
     parameter X_WHITH = 30,  //物体宽
     parameter Y_WHITH = 36,  //物体长
@@ -36,14 +36,14 @@ always @(posedge frame_clk) begin
     end 
     else begin
       if (count_y == 0) begin  // 计数器为零，y轴移动
-        loc_y <= (loc_y + 1) % V_LENGTH;
+        loc_y <= (loc_y + speed_y) % V_LENGTH;
       end
       if (count_x == 0) begin  // 计数器为零，x轴移动
         if (arrow) begin
-            loc_x <= (loc_x + 1) % H_LENGTH;
+            loc_x <= (loc_x + speed_x) % H_LENGTH;
         end
         else begin
-            loc_x <= (loc_x - 1) % H_LENGTH;
+            loc_x <= (loc_x - speed_x) % H_LENGTH;
         end
       end
     end
@@ -73,7 +73,7 @@ end
 Counter #(8, 255) counter_x (// 每个frame_clk计数器减1
   .clk       (frame_clk),
   .rstn      (rstn),
-  .load_value(n - speed_x),
+  .load_value(n - 1),
   .enable    (enable_scroll),
   .count     (count_x)
 );
@@ -81,7 +81,7 @@ Counter #(8, 255) counter_x (// 每个frame_clk计数器减1
 Counter #(8, 255) counter_y (// 每个frame_clk计数器减1
   .clk       (frame_clk),
   .rstn      (rstn),
-  .load_value(n - speed_y),
+  .load_value(n - 1),
   .enable    (enable_scroll),
   .count     (count_y)
 );
