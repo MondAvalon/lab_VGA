@@ -43,21 +43,21 @@ module Game #(
     end else begin
       case (game_state)
         GAME_MENU: begin
-          if (space) begin
+          if (left) begin
             next_game_state <= GAME_PLAYING;
           end else begin
             next_game_state <= GAME_MENU;
           end
         end
         GAME_PLAYING: begin
-          if (shoot) begin
+          if (space) begin
             next_game_state <= GAME_OVER;
           end else begin
             next_game_state <= GAME_PLAYING;
           end
         end
         GAME_OVER: begin
-          if (space) begin
+          if (right) begin
             next_game_state <= GAME_MENU;
           end else begin
             next_game_state <= GAME_OVER;

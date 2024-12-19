@@ -45,6 +45,12 @@ module FrameGenerator #(
   wire [11:0] pudding_rgb;
   wire [11:0] boss_rgb;
 
+  reg [ADDR_WIDTH-1:8] object_y;  // 高128
+  reg [8:0] object_x;  // 宽256
+  wire [ADDR_WIDTH-1:0] object_addr;
+  wire [11:0] object_rgb;
+  wire object_alpha;
+
   // Game state definitions
   localparam GAME_MENU = 2'b00;
   localparam GAME_PLAYING = 2'b01;
@@ -100,7 +106,7 @@ module FrameGenerator #(
   vram_bram vram_inst (
       .clka (clk),
       .wea  (vram_we),
-      .addra(vram_addr),
+      .addra(vram_addr-1),
       .dina (vram_rgb),
 
       .clkb (clk),
@@ -134,11 +140,19 @@ module FrameGenerator #(
       .douta(gameover_rgb)  // output wire [11 : 0] douta
   );
 
-  Rom_Item items (
-  .clka(clka),    // input wire clka
-  .addra(addra),  // input wire [14 : 0] addra
-  .douta(douta)  // output wire [11 : 0] douta
-);
+  // 256x128
+  Rom_Item objects (
+      .clka(clk),  // input wire clka
+      .addra({object_y, object_x}),  // input wire [14 : 0] addra
+      .douta(object_rgb)  // output wire [11 : 0] douta
+  );
+
+  // 256x128
+  Rom_Item_alpha objects_alpha (
+      .clka(clk),  // input wire clka
+      .addra({object_y, object_x}),  // input wire [14 : 0] addra
+      .douta(object_alpha)  // output wire [0 : 0] douta
+  );
 
   PulseSync #(1) ps (  //frame_clk上升沿
       .sync_in  (frame_clk),
