@@ -6,19 +6,18 @@ module background #(
     input clk,
     input frame_clk,
     input rstn,
-    input enable,
     input enable_scroll,
     input [ADDR_WIDTH-1:0] addr,
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素
 
-    output reg [11:0] rgb
+    output [11:0] rgb
 );
 
   wire [ADDR_WIDTH-1:0] scroll_addr;
-  reg [ADDR_WIDTH-1:0] offset;
+  reg [ADDR_WIDTH-1:0] offset;  // 偏移量
   wire [7:0] count;  // 计数器
 
-  // 在每个frame_clk上升沿更新计数器和偏移量
+  // 在每个frame_clk上升沿偏移量
   always @(posedge frame_clk) begin
     if (!rstn) begin
       offset <= 0;
@@ -31,10 +30,9 @@ module background #(
 
   assign scroll_addr = addr + offset;
 
-  Rom_Backgroud background (
+  Rom_Background background (
       .clka (clk),
-      .ena  (enable),
-      .addra(scroll_addr),
+      .addra(addr),
       .douta(rgb)
   );
 
