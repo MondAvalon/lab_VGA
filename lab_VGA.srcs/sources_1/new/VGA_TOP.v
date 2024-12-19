@@ -3,6 +3,7 @@ module TOP (
     input CPU_RESETN,
     input PS2_CLK,
     input PS2_DATA,
+    input BTNC,BTNL,BTNR,BTNU,BTND,
 
     output VGA_HS,
     output VGA_VS,
@@ -52,6 +53,11 @@ module TOP (
       .rstn(CPU_RESETN),
       .key_event(key_event),
       .key_state(key_state),
+      .BTNC(BTNC),
+      .BTNL(BTNL),
+      .BTNR(BTNR),
+      .BTNU(BTNU),
+      .BTND(BTND),
 
       .VGA_R(VGA_R),
       .VGA_G(VGA_G),

@@ -10,6 +10,7 @@ module FrameGenerator #(
     input rstn,
 
     //input in-game x, y, priority, color 
+    input [1:0] game_state,
     output reg [ADDR_WIDTH-1:0] render_addr,
 
     // output VGA signal
@@ -17,12 +18,15 @@ module FrameGenerator #(
     output [11:0] rdata
 );
 
-  wire [$clog2(H_LENGTH)-1:0] render_x;
-  wire [$clog2(V_LENGTH)-1:0] render_y;
-  assign render_x = render_addr % H_LENGTH;
-  assign render_y = render_addr / H_LENGTH;
-  // wire [ADDR_WIDTH-1:0] render_addr;
-  // assign render_addr = render_y * H_LENGTH + render_x;
+  // wire [$clog2(H_LENGTH)-1:0] render_x;
+  // wire [$clog2(V_LENGTH)-1:0] render_y;
+  reg [$clog2(H_LENGTH)-1:0] render_x;
+  reg [$clog2(V_LENGTH)-1:0] render_y;
+
+  always @(*) begin
+    render_x = render_addr[($clog2(H_LENGTH)-1):0];
+    render_y = render_addr[ADDR_WIDTH-1:$clog2(H_LENGTH)];
+  end
 
   reg is_generating_frame;
   wire generation_begin;
@@ -34,50 +38,22 @@ module FrameGenerator #(
   wire [11:0] menu_rgb;
   wire [11:0] background_rgb;
   wire [11:0] gameover_rgb;
+  wire [11:0] player_rgb;
+  wire [11:0] bullet_rgb;
+  wire [11:0] stair_rgb;
+  wire [11:0] obstacle_rgb;
+  wire [11:0] pudding_rgb;
+  wire [11:0] boss_rgb;
 
   // Game state definitions
   localparam GAME_MENU = 2'b00;
   localparam GAME_PLAYING = 2'b01;
   localparam GAME_OVER = 2'b10;
 
-  reg [1:0] game_state;
-  reg [1:0] next_game_state;
-
-  // State machine sequential logic
-  always @(posedge clk or negedge rstn) begin
-    if (!rstn) begin
-      game_state <= GAME_MENU;
-    end else begin
-      game_state <= next_game_state;
-    end
-  end
-
-  // // State machine combinational logic
-  // always @(*) begin
-  //   next_game_state = game_state;
-  //   case (game_state)
-  //     GAME_MENU: begin
-  //       if (start_button) // Add start_button input if needed
-  //         next_game_state = GAME_PLAYING;
-  //     end
-  //     GAME_PLAYING: begin
-  //       if (player_dead) // Add player_dead input if needed
-  //         next_game_state = GAME_OVER;
-  //     end
-  //     GAME_OVER: begin
-  //       if (reset_button) // Add reset_button input if needed
-  //         next_game_state = GAME_MENU;
-  //     end
-  //     default: next_game_state = GAME_MENU;
-  //   endcase
-  // end
-
   initial begin
     render_addr = 0;
     vram_we = 0;
     scroll_enabled = 1;
-    game_state = GAME_MENU;
-    next_game_state = GAME_MENU;
   end
 
   always @(posedge clk) begin
@@ -100,19 +76,19 @@ module FrameGenerator #(
       vram_addr <= render_addr;  // 由坐标生成需要写入vram的地址
 
       // in-game object color update logic
-      vram_rgb  <= background_rgb;
-      // case (game_state)
-      //   GAME_MENU: begin
-      //     vram_rgb <= menu_rgb;
-      //   end
-      //   GAME_PLAYING: begin
-      //     vram_rgb <= background_rgb;
-      //   end
-      //   GAME_OVER: begin
-      //     vram_rgb <= gameover_rgb;
-      //   end
-      //   default: vram_rgb <= 12'h0;
-      // endcase
+
+      case (game_state)
+        GAME_MENU: begin
+          vram_rgb <= menu_rgb;
+        end
+        GAME_PLAYING: begin
+          vram_rgb <= background_rgb;
+        end
+        GAME_OVER: begin
+          vram_rgb <= gameover_rgb;
+        end
+        default: vram_rgb <= vram_rgb;
+      endcase
     end else begin
       render_addr <= 0;
       vram_we <= 0;
@@ -157,6 +133,12 @@ module FrameGenerator #(
       .addra(render_addr),  // input wire [14 : 0] addra
       .douta(gameover_rgb)  // output wire [11 : 0] douta
   );
+
+  Rom_Item items (
+  .clka(clka),    // input wire clka
+  .addra(addra),  // input wire [14 : 0] addra
+  .douta(douta)  // output wire [11 : 0] douta
+);
 
   PulseSync #(1) ps (  //frame_clk上升沿
       .sync_in  (frame_clk),
