@@ -76,7 +76,7 @@ module FrameGenerator #(
 
   // 尺寸常量
   // 数字像素尺寸
-  parameter SCORE_LENGTH = 10;  // 10*10，一共4个数字显示分数
+  parameter NUM_LENGTH = 10;  // 10*10，一共4个数字显示分数
 
   typedef enum {
     GAME_MENU,
@@ -246,10 +246,10 @@ module FrameGenerator #(
           render_x <= render_x + 1;
         end
       end
-      RENDER_SCORE, RENDER_HIGH_SCORE: begin
-        if (render_x == SCORE_X_RENDER[score_digit] + SCORE_LENGTH - 1) begin
+      RENDER_SCORE: begin
+        if (render_x == SCORE_X_RENDER[score_digit] + NUM_LENGTH - 1) begin
           render_x <= SCORE_X_RENDER[score_digit];
-          if (render_y == SCORE_Y_RENDER + SCORE_LENGTH - 1) begin
+          if (render_y == SCORE_Y_RENDER + NUM_LENGTH - 1) begin
             render_y <= SCORE_Y_RENDER;
             if (score_digit == 3) begin  //完成全部4个数字的渲染
               render_state <= IDLE;
@@ -258,7 +258,7 @@ module FrameGenerator #(
               score_digit <= 0;
             end else begin
               score_digit <= score_digit + 1;
-              render_y <= (render_state == RENDER_SCORE) ? SCORE_Y_RENDER : HIGH_SCORE_Y_RENDER;
+              render_y <= SCORE_Y_RENDER;
               object_y <= NUM_Y_ROM;
               object_x <= NUM_X_ROM[current_digit];
             end
@@ -273,7 +273,37 @@ module FrameGenerator #(
         if (object_alpha) begin
           vram_rgb <= object_rgb;
         end else begin
-          vram_rgb <= (render_state == RENDER_SCORE) ? menu_rgb : background_rgb;
+          vram_rgb <= background_rgb;
+        end
+      end
+      RENDER_HIGH_SCORE: begin
+        if (render_x == HIGH_SCORE_X_RENDER[score_digit] + NUM_LENGTH - 1) begin
+          render_x <= HIGH_SCORE_X_RENDER[score_digit];
+          if (render_y == HIGH_SCORE_Y_RENDER + NUM_LENGTH - 1) begin
+            render_y <= HIGH_SCORE_Y_RENDER;
+            if (score_digit == 3) begin  //完成全部4个数字的渲染
+              render_state <= IDLE;
+              render_x <= 0;
+              render_y <= 0;
+              score_digit <= 0;
+            end else begin
+              score_digit <= score_digit + 1;
+              render_y <= HIGH_SCORE_Y_RENDER;
+              object_y <= NUM_Y_ROM;
+              object_x <= NUM_X_ROM[current_digit];
+            end
+          end else begin
+            render_y <= render_y + 1;
+            object_y <= object_y + 1;
+          end
+        end else begin
+          render_x <= render_x + 1;
+          object_x <= object_x + 1;
+        end
+        if (object_alpha) begin
+          vram_rgb <= object_rgb;
+        end else begin
+          vram_rgb <= menu_rgb;
         end
       end
     endcase
