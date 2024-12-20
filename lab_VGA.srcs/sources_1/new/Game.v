@@ -14,10 +14,21 @@ module Game #(
     input shoot,
     input space,
 
-    output reg [1:0] game_state  //游戏状态
+    output reg [1:0] game_state,  //游戏状态
     // output in-game object x, y, priority
-
+    output [15:0] score,
+    output [15:0] high_score
 );
+
+  Score score_inst(
+    .clk(clk),
+    .frame_clk(frame_clk),
+    .rstn(rstn),
+    .game_state(game_state),
+
+    .score(score),
+    .high_score(high_score)
+  );
 
   // 状态机测试代码，需要具体修改
   // Game state definitions

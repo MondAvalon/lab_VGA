@@ -67,8 +67,9 @@ module Controllor #(
       .space(space),
 
       // output in-game object x, y, priority, color
-      .game_state(game_state)
-
+      .game_state(game_state),
+      .score(score),
+      .high_score(high_score)
   );
 
   // 帧生成
@@ -84,7 +85,8 @@ module Controllor #(
       //input in-game .x, .y, .priority, .color
       .game_state (game_state),
       .render_addr(render_addr),
-
+      .score(score),
+      .high_score(high_score),
       .raddr(raddr),
       .rdata(rdata)
   );
