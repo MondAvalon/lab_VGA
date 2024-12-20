@@ -10,11 +10,11 @@ module Controllor #(
     input [127:0] key_state,
     input [7:0] ps2_data,
     input ps2_valid,
-    input BTNC,
-    BTNL,
-    BTNR,
-    BTNU,
-    BTND,
+    input btnc,
+    btnl,
+    btnr,
+    btnu,
+    btnd,
 
     output [3 : 0] VGA_R,
     output [3 : 0] VGA_G,
@@ -43,11 +43,11 @@ module Controllor #(
   GameInput game_input_inst (
       .ps2_data(ps2_data),
       .ps2_valid(ps2_valid),
-      .BTNC(BTNC),
-      .BTNL(BTNL),
-      .BTNR(BTNR),
-      .BTNU(BTNU),
-      .BTND(BTND),
+      .btnc(btnc),
+      .btnl(btnl),
+      .btnr(btnr),
+      .btnu(btnu),
+      .btnd(BTND),
 
       .left (left),
       .right(right),
@@ -60,15 +60,16 @@ module Controllor #(
       .clk(clk),
       .frame_clk(VGA_VS),
       .rstn(rstn),
-      .left(left),
       .render_addr(render_addr),
+      .left(left),
       .right(right),
       .shoot(shoot),
       .space(space),
 
       // output in-game object x, y, priority, color
-      .game_state(game_state)
-
+      .game_state(game_state),
+      .score(score),
+      .high_score(high_score)
   );
 
   // 帧生成
@@ -84,7 +85,8 @@ module Controllor #(
       //input in-game .x, .y, .priority, .color
       .game_state (game_state),
       .render_addr(render_addr),
-
+      .score(score),
+      .high_score(high_score),
       .raddr(raddr),
       .rdata(rdata)
   );
