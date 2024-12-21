@@ -4,8 +4,8 @@ module FrameGenerator #(
     parameter H_LENGTH   = 200,
     parameter V_LENGTH   = 150
 ) (
+    input ram_clk,
     input clk,
-    input pclk,
     input frame_clk,
     input rstn,
 
@@ -14,6 +14,8 @@ module FrameGenerator #(
     output [ADDR_WIDTH-1:0] render_addr,
     input [15:0] score,
     input [15:0] high_score,
+    input [$clog2(H_LENGTH)-1:0] player_x,
+    input [$clog2(V_LENGTH)-1:0] player_y,
 
     // output VGA signal
     input [ADDR_WIDTH-1:0] raddr,
@@ -23,14 +25,13 @@ module FrameGenerator #(
   reg [$clog2(H_LENGTH)-1:0] render_x;
   reg [$clog2(V_LENGTH)-1:0] render_y;
 
-  wire [$clog2(H_LENGTH)-1:0] player_x, player_x_leftup, player_x_rightdown;
-  wire [$clog2(V_LENGTH)-1:0] player_y, player_y_leftup, player_y_rightdown;
+  wire [$clog2(H_LENGTH)-1:0] player_x_leftup, player_x_rightdown;
+  wire [$clog2(V_LENGTH)-1:0] player_y_leftup, player_y_rightdown;
   assign player_x_leftup = player_x - 14;
   assign player_x_rightdown = player_x + 15;
   assign player_y_leftup = player_y - 17;
   assign player_y_rightdown = player_y + 18;
 
-  reg is_generating_frame;
   wire generation_begin;
   reg scroll_enabled;
 
@@ -47,10 +48,10 @@ module FrameGenerator #(
   wire [11:0] pudding_rgb;
   wire [11:0] boss_rgb;
 
-  reg [1:0] player_ani_state;
+  reg [1:0] player_anime_state;
   reg [4:0] render_state;
-  reg [ADDR_WIDTH-1:8] object_y;  // 高128
-  reg [8:0] object_x;  // 宽256
+  reg [6:0] object_y;  // 高128
+  reg [7:0] object_x;  // 宽256
   wire [ADDR_WIDTH-1:0] object_addr;
   wire [11:0] object_rgb;
   wire object_alpha;
@@ -60,9 +61,9 @@ module FrameGenerator #(
 
   // 显示坐标常量
   parameter [7:0] SCORE_X_RENDER[0:3] = {8'd0, 8'd10, 8'd20, 8'd30};
-  parameter SCORE_Y_RENDER = 140;
+  parameter SCORE_Y_RENDER = 0;
   parameter [7:0] HIGH_SCORE_X_RENDER[0:3] = {8'd0, 8'd10, 8'd20, 8'd30};
-  parameter HIGH_SCORE_Y_RENDER = 130;
+  parameter HIGH_SCORE_Y_RENDER = 0;
 
   // 游戏对象ROM坐标常量
   // 数字0-9的ROM坐标
@@ -98,12 +99,12 @@ module FrameGenerator #(
   } RenderState;
 
   vram_bram vram_inst (
-      .clka (clk),
+      .clka (ram_clk),
       .wea  (vram_we),
-      .addra(render_addr),
+      .addra(render_addr-1),
       .dina (vram_rgb),
 
-      .clkb (clk),
+      .clkb (ram_clk),
       .addrb(raddr),
       .doutb(rdata)
   );
@@ -113,7 +114,7 @@ module FrameGenerator #(
       .H_LENGTH  (H_LENGTH),
       .V_LENGTH  (V_LENGTH)
   ) background_inst (
-      .clk(clk),
+      .clk(ram_clk),
       .frame_clk(generation_begin),
       .rstn(rstn),
       .scroll_enabled(1),
@@ -123,27 +124,27 @@ module FrameGenerator #(
   );
 
   Rom_Menu menu (
-      .clka(clk),  // input wire clka
+      .clka(ram_clk),  // input wire clka
       .addra(render_addr),  // input wire [14 : 0] addra
       .douta(menu_rgb)  // output wire [11 : 0] douta
   );
 
   Rom_Gameover gameover (
-      .clka(clk),  // input wire clka
+      .clka(ram_clk),  // input wire clka
       .addra(render_addr),  // input wire [14 : 0] addra
       .douta(gameover_rgb)  // output wire [11 : 0] douta
   );
 
   // 256x128
   Rom_Item objects (
-      .clka(clk),  // input wire clka
+      .clka(ram_clk),  // input wire clka
       .addra({object_y, object_x}),  // input wire [14 : 0] addra
       .douta(object_rgb)  // output wire [11 : 0] douta
   );
 
   // 256x128
   Rom_Item_alpha objects_alpha (
-      .clka(clk),  // input wire clka
+      .clka(ram_clk),  // input wire clka
       .addra({object_y, object_x}),  // input wire [14 : 0] addra
       .douta(object_alpha)  // output wire [0 : 0] douta
   );
@@ -157,15 +158,14 @@ module FrameGenerator #(
   initial begin
     render_x = 0;
     render_y = 0;
-    is_generating_frame = 0;
     scroll_enabled = 0;
     vram_we = 0;
     // vram_addr = 0;
     vram_rgb = 0;
-    player_ani_state = 0;
+    player_anime_state = 0;
     render_state = IDLE;
-    object_y = 0;
-    object_x = 0;
+    // object_y = 0;
+    // object_x = 0;
   end
 
   reg  [1:0] score_digit;  // 当前渲染第几位数字(0-3)
@@ -180,133 +180,159 @@ module FrameGenerator #(
     if (~rstn) begin
       render_x <= 0;
       render_y <= 0;
-      is_generating_frame <= 0;
       scroll_enabled <= 0;
       vram_we <= 0;
       //   vram_addr <= 0;
       vram_rgb <= 0;
-      player_ani_state <= 0;
+      player_anime_state <= 0;
       render_state <= IDLE;
-      object_y <= 0;
-      object_x <= 0;
-    end else if (generation_begin) begin
-      is_generating_frame <= 1;
-    end
-    case (render_state)
-      IDLE: begin
-        if (is_generating_frame) begin
-          render_state <= RENDER_BACKGROUND;
-          vram_we <= 1;
-          render_x <= 0;
-          render_y <= 0;
-          vram_rgb <= background_rgb;
-        end else begin
-          render_state <= IDLE;
-          vram_we <= 0;
-          render_x <= 0;
-          render_y <= 0;
-          vram_rgb <= 0;
-        end
-      end
-      RENDER_BACKGROUND: begin
-        case (game_state)
-          GAME_MENU: begin
-            vram_rgb <= menu_rgb;
-          end
-          GAME_PLAYING: begin
-            vram_rgb <= background_rgb;
-          end
-          GAME_OVER: begin
-            vram_rgb <= gameover_rgb;
-          end
-        endcase
-        if (render_x == H_LENGTH - 1) begin
-          render_x <= 0;
-          if (render_y == V_LENGTH - 1) begin
+      // object_y <= 0;
+      // object_x <= 0;
+    end else begin
+      case (render_state)
+        IDLE: begin
+          if (generation_begin) begin
+            render_state <= RENDER_BACKGROUND;
+            vram_we <= 1;
+            render_x <= 0;
             render_y <= 0;
-            if (game_state == GAME_MENU || game_state == GAME_OVER) begin
-              render_state <= RENDER_HIGH_SCORE;
-              render_x <= HIGH_SCORE_X_RENDER[0];
-              render_y <= HIGH_SCORE_Y_RENDER;
-              object_x <= NUM_X_ROM[high_score[15:12]];
-              object_y <= NUM_Y_ROM;
-            end else if (game_state == GAME_PLAYING) begin
-              render_state <= RENDER_SCORE;
-              render_x <= SCORE_X_RENDER[0];
-              render_y <= SCORE_Y_RENDER;
-              object_x <= NUM_X_ROM[score[15:12]];
-              object_y <= NUM_Y_ROM;
-            end else begin
-              render_state <= IDLE;
-            end
+            if (game_state == GAME_MENU) vram_rgb <= menu_rgb;
+            else if (game_state == GAME_PLAYING) vram_rgb <= background_rgb;
+            else if (game_state == GAME_OVER) vram_rgb <= gameover_rgb;
           end else begin
-            render_y <= render_y + 1;
+            render_state <= IDLE;
+            vram_we <= 0;
+            render_x <= 0;
+            render_y <= 0;
+            vram_rgb <= 0;
           end
-        end else begin
-          render_x <= render_x + 1;
         end
-      end
-      RENDER_SCORE: begin
-        if (render_x == SCORE_X_RENDER[score_digit] + NUM_LENGTH - 1) begin
-          render_x <= SCORE_X_RENDER[score_digit];
-          if (render_y == SCORE_Y_RENDER + NUM_LENGTH - 1) begin
-            render_y <= SCORE_Y_RENDER;
-            if (score_digit == 3) begin  //完成全部4个数字的渲染
-              render_state <= IDLE;
+        RENDER_BACKGROUND: begin
+          vram_rgb<=game_state == GAME_MENU ? menu_rgb : (game_state == GAME_PLAYING ? background_rgb : gameover_rgb);
+
+          if (render_x == H_LENGTH - 1) begin
+            if (render_y == V_LENGTH - 1) begin  //完成全部背景的渲染
+              if (game_state == GAME_MENU || game_state == GAME_OVER) begin
+                render_state <= RENDER_HIGH_SCORE;
+                render_x <= HIGH_SCORE_X_RENDER[score_digit];
+                render_y <= HIGH_SCORE_Y_RENDER;
+                // object_x <= NUM_X_ROM[high_score[15:12]];
+                // object_y <= NUM_Y_ROM;
+              end else if (game_state == GAME_PLAYING) begin
+                render_state <= RENDER_SCORE;
+                render_x <= SCORE_X_RENDER[score_digit];
+                render_y <= SCORE_Y_RENDER;
+                // object_x <= NUM_X_ROM[score[15:12]];
+                // object_y <= NUM_Y_ROM;
+              end
+            end else begin  //完成一行的渲染
+              render_y <= render_y + 1;
               render_x <= 0;
-              render_y <= 0;
-              score_digit <= 0;
-            end else begin
-              score_digit <= score_digit + 1;
-              render_y <= SCORE_Y_RENDER;
-              object_y <= NUM_Y_ROM;
-              object_x <= NUM_X_ROM[current_digit];
             end
           end else begin
-            render_y <= render_y + 1;
-            object_y <= object_y + 1;
+            render_x <= render_x + 1;
           end
-        end else begin
-          render_x <= render_x + 1;
-          object_x <= object_x + 1;
         end
-        if (object_alpha) begin
-          vram_rgb <= object_rgb;
-        end else begin
-          vram_rgb <= background_rgb;
+        RENDER_SCORE: begin
+          if (render_x == SCORE_X_RENDER[score_digit] + NUM_LENGTH - 1) begin
+            if (render_y == SCORE_Y_RENDER + NUM_LENGTH - 1) begin  // 完成一个数字渲染
+              if (score_digit == 3) begin  // 完成所有数字
+                render_state <= RENDER_PLAYER;
+                score_digit <= 0;
+                render_x <= player_x_leftup;
+                render_y <= player_y_leftup;
+              end else begin  // 进入下一个数字
+                render_x <= SCORE_X_RENDER[score_digit+1];
+                render_y <= SCORE_Y_RENDER;
+                score_digit <= score_digit + 1;
+              end
+            end else begin  // 下一行
+              render_y <= render_y + 1;
+              render_x <= SCORE_X_RENDER[score_digit];
+            end
+          end else begin  // 下一列
+            render_x <= render_x + 1;
+          end
+          vram_rgb <= object_alpha ? object_rgb : game_state == GAME_MENU ? menu_rgb : gameover_rgb;
+          // vram_rgb <= object_rgb;
         end
-      end
-      RENDER_HIGH_SCORE: begin
-        if (render_x == HIGH_SCORE_X_RENDER[score_digit] + NUM_LENGTH - 1) begin
-          render_x <= HIGH_SCORE_X_RENDER[score_digit];
-          if (render_y == HIGH_SCORE_Y_RENDER + NUM_LENGTH - 1) begin
-            render_y <= HIGH_SCORE_Y_RENDER;
-            if (score_digit == 3) begin  //完成全部4个数字的渲染
+        RENDER_HIGH_SCORE: begin
+          if (render_x == HIGH_SCORE_X_RENDER[score_digit] + NUM_LENGTH - 1) begin
+            if (render_y == HIGH_SCORE_Y_RENDER + NUM_LENGTH - 1) begin  // 完成一个数字渲染
+              if (score_digit == 3) begin  // 完成所有数字
+                render_state <= IDLE;
+                score_digit  <= 0;
+              end else begin  // 进入下一个数字
+                render_x <= HIGH_SCORE_X_RENDER[score_digit+1];
+                render_y <= HIGH_SCORE_Y_RENDER;
+                score_digit <= score_digit + 1;
+                vram_rgb <= background_rgb;
+              end
+            end else begin  // 下一行
+              render_y <= render_y + 1;
+              render_x <= HIGH_SCORE_X_RENDER[score_digit];
+            end
+          end else begin  // 下一列
+            render_x <= render_x + 1;
+          end
+          vram_rgb <= object_alpha ? object_rgb : game_state == GAME_MENU ? menu_rgb : gameover_rgb;
+          // vram_rgb <= object_rgb;
+        end
+        RENDER_PLAYER: begin
+          if (render_x == player_x_rightdown) begin
+            if (render_y == player_y_rightdown) begin
               render_state <= IDLE;
-              render_x <= 0;
-              render_y <= 0;
-              score_digit <= 0;
             end else begin
-              score_digit <= score_digit + 1;
-              render_y <= HIGH_SCORE_Y_RENDER;
-              object_y <= NUM_Y_ROM;
-              object_x <= NUM_X_ROM[current_digit];
+              render_x <= player_x_leftup;
+              render_y <= render_y + 1;
             end
           end else begin
-            render_y <= render_y + 1;
-            object_y <= object_y + 1;
+            render_x <= render_x + 1;
           end
-        end else begin
-          render_x <= render_x + 1;
-          object_x <= object_x + 1;
+          vram_rgb <= object_alpha ? object_rgb : background_rgb;
+          // vram_rgb <= object_rgb;
         end
-        if (object_alpha) begin
-          vram_rgb <= object_rgb;
-        end else begin
-          vram_rgb <= menu_rgb;
-        end
-      end
-    endcase
+      endcase
+    end
+  end
+
+  // // 在FrameGenerator中实例化
+  // RenderHelper #(
+  //     .SPRITE_WIDTH (NUM_LENGTH),
+  //     .SPRITE_HEIGHT(NUM_LENGTH)
+  // ) num_render_helper (
+  //     .render_x(render_x),
+  //     .render_y(render_y),
+  //     .sprite_base_x(NUM_X_ROM[current_digit]),
+  //     .sprite_base_y(NUM_Y_ROM),
+  //     .pos_x(SCORE_X_RENDER[score_digit]),
+  //     .pos_y(SCORE_Y_RENDER),
+  //     .object_x(num_x),
+  //     .object_y(num_y)
+  // );
+
+  // RenderHelper #(
+  //     .SPRITE_WIDTH (30),
+  //     .SPRITE_HEIGHT(36)
+  // ) player_render_helper (
+  //     .render_x(render_x),
+  //     .render_y(render_y),
+  //     .sprite_base_x(PLAYER_X_ROM[player_anime_state]),
+  //     .sprite_base_y(PLAYER_Y_ROM),
+  //     .pos_x(player_x_leftup),
+  //     .pos_y(player_y_leftup),
+  //     .object_x(player_x),
+  //     .object_y(player_y)
+  // );
+
+  always @(*) begin
+    if (render_state == RENDER_SCORE || render_state == RENDER_HIGH_SCORE) begin
+      object_x = NUM_X_ROM[current_digit] + render_x - SCORE_X_RENDER[score_digit];
+      object_y = NUM_Y_ROM + render_y - SCORE_Y_RENDER;
+    end else if (render_state == RENDER_PLAYER) begin
+      object_x = PLAYER_X_ROM[player_anime_state] + render_x - player_x_leftup;
+      object_y = PLAYER_Y_ROM + render_y - player_y_leftup;
+    end
   end
 
 endmodule

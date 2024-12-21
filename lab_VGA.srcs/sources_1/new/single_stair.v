@@ -1,4 +1,4 @@
-module Stairs#(
+module SingleStair#(
     parameter H_LENGTH  = 200, //宽度
     parameter V_LENGTH  = 150  //高度
 )(

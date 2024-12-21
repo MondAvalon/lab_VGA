@@ -34,6 +34,7 @@ module Controllor #(
   // 像素时钟
   pclk pixel_clock_inst (
       .clk_out1(pclk),
+      .clk_out2(clk_5mhz),
       .reset   (~rstn),
       //   .locked  (locked),
       .clk_in1 (clk)
@@ -57,7 +58,7 @@ module Controllor #(
 
   // 游戏逻辑
   Game game_logic_inst (
-      .clk(clk),
+      .clk(pclk),
       .frame_clk(VGA_VS),
       .rstn(rstn),
       .render_addr(render_addr),
@@ -78,15 +79,18 @@ module Controllor #(
       .H_LENGTH  (H_LENGTH),
       .V_LENGTH  (V_LENGTH)
   ) frame_gen_inst (
-      .clk(clk),
+      .ram_clk(clk),
+      .clk(pclk),
       .frame_clk(VGA_VS),
       .rstn(rstn),
 
       //input in-game .x, .y, .priority, .color
-      .game_state (game_state),
+      .game_state(game_state),
       .render_addr(render_addr),
-      .score(score),
-      .high_score(high_score),
+      .score(16'h1234),
+      .high_score(16'h7890),
+      .player_x(100),
+      .player_y(75),
       .raddr(raddr),
       .rdata(rdata)
   );

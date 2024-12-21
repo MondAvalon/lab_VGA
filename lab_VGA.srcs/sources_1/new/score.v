@@ -9,7 +9,7 @@ module Score(
     output reg [15:0] high_score
     );
     initial begin
-        score = 16'h0010;
-        high_score = 16'b0000_0000_0000_0000;
+        score = 16'h1234;
+        high_score = 16'h7890;
     end
 endmodule

@@ -86,7 +86,7 @@ output wire [0 : 0] douta;
     .C_LOAD_INIT_FILE(1),
     .C_INIT_FILE_NAME("Rom_Item_alpha.mif"),
     .C_INIT_FILE("Rom_Item_alpha.mem"),
-    .C_USE_DEFAULT_DATA(0),
+    .C_USE_DEFAULT_DATA(1),
     .C_DEFAULT_DATA("0"),
     .C_HAS_RSTA(0),
     .C_RST_PRIORITY_A("CE"),
