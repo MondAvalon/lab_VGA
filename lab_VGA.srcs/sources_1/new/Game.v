@@ -20,16 +20,6 @@ module Game #(
     output [15:0] high_score
 );
 
-  Score score_inst(
-    .clk(clk),
-    .frame_clk(frame_clk),
-    .rstn(rstn),
-    .game_state(game_state),
-
-    .score(score),
-    .high_score(high_score)
-  );
-
   // 状态机测试代码，需要具体修改
   // Game state definitions
   localparam GAME_MENU = 2'b00;
@@ -38,8 +28,7 @@ module Game #(
 
   reg [1:0] next_game_state;
 
-  // State machine sequential logic
-  always @(posedge clk or negedge rstn) begin
+  always @(posedge clk) begin
     if (!rstn) begin
       game_state <= GAME_MENU;
     end else begin
@@ -78,44 +67,14 @@ module Game #(
     end
   end
 
-  // Game object definitions
-  localparam OBJ_BACKGROUND = 2'b00;
-  localparam OBJ_PLAYER = 2'b01;
-  localparam OBJ_BULLET = 2'b10;
-  localparam OBJ_STAIR = 2'b11;
-  localparam OBJ_OBSTACLE = 3'b100;
-  localparam OBJ_PUDDING = 3'b101;
-  localparam OBJ_BOSS = 3'b110;
+    Score score_inst(
+    .clk(clk),
+    .frame_clk(frame_clk),
+    .rstn(rstn),
+    .game_state(game_state),
 
-  reg [2:0] obj_type;
-  reg [2:0] next_obj_type;
-
-  // State machine sequential logic
-  always @(posedge frame_clk) begin
-    if (!rstn) begin
-      obj_type <= OBJ_BACKGROUND;
-    end else begin
-      obj_type <= next_obj_type;
-    end
-  end
-
-  // Game object logic
-  always @(posedge frame_clk) begin
-    if (!rstn) begin
-      next_obj_type <= OBJ_BACKGROUND;
-    end else begin
-      case (game_state)
-        GAME_MENU: begin
-          next_obj_type <= OBJ_BACKGROUND;
-        end
-        GAME_PLAYING: begin
-          next_obj_type <= OBJ_PLAYER;
-        end
-        GAME_OVER: begin
-          next_obj_type <= OBJ_BACKGROUND;
-        end
-      endcase
-    end
-  end
+    .score(score),
+    .high_score(high_score)
+  );
 
 endmodule

@@ -23,10 +23,13 @@ module Controllor #(
     output VGA_VS
 );
   wire pclk;
+  wire clk_25mhz;
   wire [11:0] rdata;
   wire [ADDR_WIDTH-1:0] raddr;
   wire [ADDR_WIDTH-1:0] render_addr;
   wire [1:0] game_state;
+  wire [15:0] score;
+  wire [15:0] high_score;
 
   wire left, right, shoot, space;
 
@@ -34,7 +37,7 @@ module Controllor #(
   // 像素时钟
   pclk pixel_clock_inst (
       .clk_out1(pclk),
-      .clk_out2(clk_5mhz),
+      .clk_out2(clk_25mhz),
       .reset   (~rstn),
       //   .locked  (locked),
       .clk_in1 (clk)
@@ -87,8 +90,8 @@ module Controllor #(
       //input in-game .x, .y, .priority, .color
       .game_state(game_state),
       .render_addr(render_addr),
-      .score(16'h1234),
-      .high_score(16'h7890),
+      .score(score),
+      .high_score(high_score),
       .player_x(100),
       .player_y(75),
       .raddr(raddr),
