@@ -338,8 +338,8 @@ module FrameGenerator #(
         end
         RENDER_BULLET: begin
           vram_we  <= 1;
-          // vram_rgb <= object_alpha ? object_rgb : background_rgb;
-          vram_rgb <= object_rgb;
+          vram_rgb <= object_alpha ? object_rgb : background_rgb;
+          // vram_rgb <= object_rgb;
           if (!(render_x ^ bullet_x_right)) begin
             if (!(render_y ^ bullet_y_down)) begin
               // next_render_state <= RENDER_PLAYER;
@@ -372,8 +372,8 @@ module FrameGenerator #(
         end
         RENDER_BOSS: begin
           vram_we  <= 1;
-          // vram_rgb <= object_alpha ? object_rgb : background_rgb;
-          vram_rgb <= object_rgb;
+          vram_rgb <= object_alpha ? object_rgb : background_rgb;
+          // vram_rgb <= object_rgb;
           if (!(render_x ^ boss_x_right)) begin
             if (!(render_y ^ boss_y_down)) begin
               // next_render_state <= IDLE;

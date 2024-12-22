@@ -69,7 +69,7 @@ module Controllor #(
 
   // 游戏逻辑
   Game game_logic_inst (
-      .clk(pclk),
+      .clk(clk_25mhz),
       .frame_clk(VGA_VS),
       .rstn(rstn),
       .render_addr(render_addr),

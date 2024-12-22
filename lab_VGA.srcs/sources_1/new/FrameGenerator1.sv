@@ -1,4 +1,4 @@
-module FrameGenerator #(
+module FrameGenerator_bak #(
     parameter ADDR_WIDTH = 15,
     parameter H_LENGTH   = 200,
     parameter V_LENGTH   = 150

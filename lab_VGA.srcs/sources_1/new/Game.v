@@ -28,6 +28,19 @@ module Game #(
     output [$clog2(V_LENGTH)-1:0] bullet_y
 );
 
+  // wire [$clog2(H_LENGTH)-1:0] next_player_x;
+  // wire [$clog2(V_LENGTH)-1:0] next_player_y;
+  // wire [$clog2(H_LENGTH)-1:0] next_boss_x;
+  // wire [$clog2(V_LENGTH)-1:0] next_boss_y;
+  // wire [$clog2(H_LENGTH)-1:0] next_bullet_x;
+  // wire [$clog2(V_LENGTH)-1:0] next_bullet_y;
+
+  // test
+  assign boss_x = 100;
+  assign boss_y = 20;
+  assign bullet_x = 10;
+  assign bullet_y = 20;
+
   // 状态机测试代码，需要具体修改
   // Game state definitions
   localparam GAME_MENU = 2'b00;
@@ -43,6 +56,12 @@ module Game #(
       game_state <= next_game_state;
     end
   end
+
+  // always @(posedge clk) begin
+  //   if (!rstn) begin
+      
+  //   end
+  // end
 
   // 状态机切换逻辑
   always @(posedge frame_clk) begin
@@ -90,8 +109,6 @@ module Game #(
       .clk(clk),
       .frame_clk(frame_clk),
       .rstn(rstn),
-      .addr_x(100),
-      .addr_y(100),
       .key_state(0),
       .enable_scroll(enable_scroll),
       .collision(0),
@@ -103,7 +120,7 @@ module Game #(
 
   initial begin
     enable_scroll = 1;
-    n = 1;
+    n = 2;
   end
 
 endmodule

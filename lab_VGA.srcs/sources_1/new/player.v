@@ -2,30 +2,30 @@
 module Player #(
     parameter ADDR_WIDTH = 15,
     parameter SPEED_X = 2,
-    parameter BUNCE_V = -2,  //回弹初速度
+    parameter signed BUNCE_V = -3,  //回弹初速度
     parameter G_CONST = 1,  //重力加速度
     parameter X_WHITH = 30,  //物体宽
     parameter Y_WHITH = 36,  //物体长
     parameter H_LENGTH  = 200, //宽度
-    parameter V_LENGTH  = 150  //高度
+    parameter V_LENGTH  = 150,  //高度
+    parameter addr_x = 100,  //输入起始中心x坐标
+    parameter addr_y = 75  //输入起始中心y坐标
 )(
     input clk,
     input frame_clk,
     input rstn,
-    input [$clog2(H_LENGTH)-1:0] addr_x,  //输入起始中心x坐标
-    input [$clog2(V_LENGTH)-1:0] addr_y,  //输入起始中心y坐标
     input [127:0] key_state,
     input enable_scroll,    //借用一下，实现暂停功能
     input collision,       //碰撞信号
     input [7:0] n,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
-    output reg [$clog2(V_LENGTH)-1:0] loc_y  //y位置
-
+    output reg [$clog2(V_LENGTH)-1:0] loc_y,  //y位置
+    output reg [1:0] player_anime_state //玩家动画状态
 );
 reg  arrow; //判断左右移动方向，取1为左,取0为右
-reg  [7:0] speed_x;  
-reg  [7:0] speed_y;
+reg  [3:0] speed_x;
+reg signed [$clog2(V_LENGTH)-1:0] speed_y;
 wire [7:0] count_x;  // 计数器
 wire [7:0] count_y;  // 计数器
 
@@ -37,7 +37,7 @@ always @(posedge frame_clk) begin
     end 
     else begin
       if (count_y == 0) begin  // 计数器为零，y轴移动
-        loc_y <= (loc_y + speed_y) % V_LENGTH;
+        loc_y <= loc_y + speed_y;
       end
       if (count_x == 0) begin  // 计数器为零，x轴移动
         if (arrow) begin
@@ -65,9 +65,14 @@ end
 
 //更新当前y方向速度，根据collision确定碰撞
 always @(posedge frame_clk) begin
-    speed_y <= speed_y + G_CONST;
-    if (collision) begin
-        speed_y <= BUNCE_V;
+    if (collision || (loc_y>V_LENGTH-16 && ~speed_y[$clog2(V_LENGTH)-1])) begin
+        speed_y <= -speed_y;
+    end else if(count_y == 0) begin
+        if (speed_y == 10) begin
+            speed_y <= speed_y;
+        end else begin
+            speed_y <= speed_y + G_CONST;
+        end
     end
 end
 
@@ -93,6 +98,7 @@ initial begin //初始化
     arrow <= 0;
     speed_x <= 0;
     speed_y <= 0;
+    player_anime_state <= 0;
 end
 
 endmodule
