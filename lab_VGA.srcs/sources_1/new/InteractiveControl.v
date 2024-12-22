@@ -30,8 +30,16 @@ module Controllor #(
   wire [1:0] game_state;
   wire [15:0] score;
   wire [15:0] high_score;
-
   wire left, right, shoot, space;
+  wire enable_scroll;
+  wire [7:0] n;
+  wire [$clog2(H_LENGTH)-1:0] player_x;
+  wire [$clog2(V_LENGTH)-1:0] player_y;
+  wire [$clog2(H_LENGTH)-1:0] boss_x;
+  wire [$clog2(V_LENGTH)-1:0] boss_y;
+  wire [$clog2(H_LENGTH)-1:0] bullet_x;
+  wire [$clog2(V_LENGTH)-1:0] bullet_y;
+
 
 
   // 像素时钟
@@ -39,7 +47,7 @@ module Controllor #(
       .clk_out1(pclk),
       .clk_out2(clk_25mhz),
       .reset   (~rstn),
-      //   .locked  (locked),
+      .locked  (),
       .clk_in1 (clk)
   );
 
@@ -73,7 +81,15 @@ module Controllor #(
       // output in-game object x, y, priority, color
       .game_state(game_state),
       .score(score),
-      .high_score(high_score)
+      .high_score(high_score),
+      .enable_scroll(enable_scroll),
+      .n(n),
+      .player_x(player_x),
+      .player_y(player_y),
+      .boss_x(boss_x),
+      .boss_y(boss_y),
+      .bullet_x(bullet_x),
+      .bullet_y(bullet_y)
   );
 
   // 帧生成
@@ -89,15 +105,17 @@ module Controllor #(
 
       //input in-game .x, .y, .priority, .color
       .game_state(game_state),
+      .scroll_enabled(enable_scroll),
+      .n(n),
       .render_addr(render_addr),
       .score(score),
       .high_score(high_score),
-      .player_x(100),
-      .player_y(75),
-      .boss_x(100),
-      .boss_y(20),
-      .bullet_x(10),
-      .bullet_y(70),
+      .player_x(player_x),
+      .player_y(player_y),
+      .boss_x(boss_x),
+      .boss_y(boss_y),
+      .bullet_x(bullet_x),
+      .bullet_y(bullet_y),
       .raddr(raddr),
       .rdata(rdata)
   );

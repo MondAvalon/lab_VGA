@@ -21,6 +21,7 @@ module Player #(
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
     output reg [$clog2(V_LENGTH)-1:0] loc_y  //y位置
+
 );
 reg  arrow; //判断左右移动方向，取1为左,取0为右
 reg  [7:0] speed_x;  

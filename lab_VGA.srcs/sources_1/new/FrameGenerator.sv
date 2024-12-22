@@ -11,7 +11,10 @@ module FrameGenerator #(
 
     //input in-game x, y
     input [1:0] game_state,
+    input scroll_enabled,
+    input [7:0] n,
     output [ADDR_WIDTH-1:0] render_addr,
+    output reg [3:0] stair_index,
     input [15:0] score,
     input [15:0] high_score,
     input [$clog2(H_LENGTH)-1:0] player_x,
@@ -20,6 +23,8 @@ module FrameGenerator #(
     input [$clog2(V_LENGTH)-1:0] boss_y,
     input [$clog2(H_LENGTH)-1:0] bullet_x,
     input [$clog2(V_LENGTH)-1:0] bullet_y,
+    input [$clog2(H_LENGTH)-1:0] stair_x,
+    input [$clog2(V_LENGTH)-1:0] stair_y,
 
     // output VGA signal
     input [ADDR_WIDTH-1:0] raddr,
@@ -42,14 +47,25 @@ module FrameGenerator #(
     RENDER_OBSTACLE,
     RENDER_BULLET,
     RENDER_BOSS,
-    RENDER_PLAYER
+    RENDER_PLAYER,
+    RENDER_FLAN
   } render_state_t;
 
   reg [$clog2(H_LENGTH)-1:0] render_x;
   reg [$clog2(V_LENGTH)-1:0] render_y;
 
-  wire [$clog2(H_LENGTH)-1:0] player_x_left, player_x_right, boss_x_left, boss_x_right, bullet_x_left, bullet_x_right;
-  wire [$clog2(V_LENGTH)-1:0] player_y_up, player_y_down, boss_y_up, boss_y_down, bullet_y_up, bullet_y_down;
+  wire [$clog2 (H_LENGTH)-1:0] player_x_left, player_x_right;
+  wire [$clog2 (H_LENGTH)-1:0] flan_x_left, flan_x_right;
+  wire [$clog2 (H_LENGTH)-1:0] boss_x_left, boss_x_right;
+  wire [$clog2 (H_LENGTH)-1:0] bullet_x_left, bullet_x_right;
+  wire [$clog2 (H_LENGTH)-1:0] stair_x_left, stair_x_right;
+
+  wire [$clog2 (V_LENGTH)-1:0] player_y_up, player_y_down;
+  wire [$clog2 (V_LENGTH)-1:0] flan_y_up, flan_y_down;
+  wire [$clog2 (V_LENGTH)-1:0] boss_y_up, boss_y_down;
+  wire [$clog2 (V_LENGTH)-1:0] bullet_y_up, bullet_y_down;
+  wire [$clog2 (V_LENGTH)-1:0] stair_y_up, stair_y_down;
+
   assign player_x_left = player_x - 14;
   assign player_x_right = player_x + 15;
   assign player_y_up = player_y - 17;
@@ -62,10 +78,17 @@ module FrameGenerator #(
   assign bullet_x_right = bullet_x + 4;
   assign bullet_y_up = bullet_y - 11;
   assign bullet_y_down = bullet_y + 12;
+  assign stair_x_left = stair_x - 14;
+  assign stair_x_right = stair_x + 15;
+  assign stair_y_up = stair_y - 1;
+  assign stair_y_down = stair_y + 2;
 
+  assign flan_x_left = player_x + 20;
+  assign flan_x_right = player_x + 49;
+  assign flan_y_up = player_y - 17;
+  assign flan_y_down = player_y + 18;
 
   wire generation_begin;
-  reg scroll_enabled;
 
   reg vram_we;  //写使能
   reg [ADDR_WIDTH-1:0] vram_addr;
@@ -112,95 +135,37 @@ module FrameGenerator #(
   localparam BOSS_X_ROM = 150;
   localparam BOSS_Y_ROM = 0;
   // 子弹坐标
-  localparam BULLET_X_ROM = 30;
-  localparam BULLET_Y_ROM = 62;
-
-
-  // 尺寸常量
-  // 数字像素尺寸
-  localparam NUM_LENGTH = 10;  // 10*10，一共4个数字显示分数
-
-  vram_bram vram_inst (
-      .clka (clk),
-      .wea  (vram_we),
-      .addra(vram_addr),
-      .dina (vram_rgb),
-
-      .clkb (ram_clk),
-      .addrb(raddr),
-      .doutb(rdata)
-  );
-
-  background #(
-      .ADDR_WIDTH(ADDR_WIDTH),
-      .H_LENGTH  (H_LENGTH),
-      .V_LENGTH  (V_LENGTH)
-  ) background_inst (
-      .clk(clk),
-      .frame_clk(generation_begin),
-      .rstn(rstn),
-      .scroll_enabled(1),
-      .addr(render_addr_next),  //读取rom中的数据的地址
-      .n(4),  //每n个frame_clk
-      .rgb(background_rgb)
-  );
-
-  Rom_Menu menu (
-      .clka(clk),  // input wire clka
-      .addra(render_addr_next),  // input wire [14 : 0] addra
-      .douta(menu_rgb)  // output wire [11 : 0] douta
-  );
-
-  Rom_Gameover gameover (
-      .clka(clk),  // input wire clka
-      .addra(render_addr_next),  // input wire [14 : 0] addra
-      .douta(gameover_rgb)  // output wire [11 : 0] douta
-  );
-
-  // 256x128
-  Rom_Item objects (
-      .clka(ram_clk),  // input wire clka
-      .addra({object_y, object_x}),  // input wire [14 : 0] addra
-      .douta(object_rgb)  // output wire [11 : 0] douta
-  );
-
-  // 256x128
-  Rom_Item_alpha objects_alpha (
-      .clka(ram_clk),  // input wire clka
-      .addra({object_y, object_x}),  // input wire [14 : 0] addra
-      .douta(object_alpha)  // output wire [0 : 0] douta
-  );
-
-  PulseSync #(1) ps (  //frame_clk上升沿
-      .sync_in  (frame_clk),
-      .clk      (clk),
-      .pulse_out(generation_begin)
-  );
+  localparam BULLET_X_ROM = 100;
+  localparam BULLET_Y_ROM = 36;
+  // 障碍物坐标
+  localparam [7:0] OBSTACLE_X_ROM[0:4] = {8'd0, 8'd16, 8'd32, 8'd48, 8'd64};
+  localparam OBSTACLE_Y_ROM = 46;
+  // 布丁道具坐标
+  localparam PUDDING_X_ROM = 109;
+  localparam PUDDING_Y_ROM = 36;
+  // 残机道具坐标
+  localparam ONEUP_X_ROM = 80;
+  localparam ONEUP_Y_ROM = 46;
+  // 平台坐标
+  localparam [7:0] STAIR_X_ROM[0:1] = {8'd0, 8'd30};
+  localparam STAIR_Y_ROM = 62;
 
   reg [1:0] score_digit;  // 当前渲染第几位数字(0-3)
   reg [1:0] next_score_digit;  // 下一个渲染的数字位数
   reg [3:0] current_digit;  // 当前渲染的数字值
 
+  // 读取分数当前位数字
   always @(*) begin
     case (score_digit)
-      0: current_digit = render_state == RENDER_SCORE ? score[15:12] : high_score[15:12];
-      1: current_digit = render_state == RENDER_SCORE ? score[11:8] : high_score[11:8];
-      2: current_digit = render_state == RENDER_SCORE ? score[7:4] : high_score[7:4];
-      3: current_digit = render_state == RENDER_SCORE ? score[3:0] : high_score[3:0];
+      0: current_digit = (render_state ^ RENDER_SCORE) ? high_score[15:12] : score[15:12];
+      1: current_digit = (render_state ^ RENDER_SCORE) ? high_score[11:8] : score[11:8];
+      2: current_digit = (render_state ^ RENDER_SCORE) ? high_score[7:4] : score[7:4];
+      3: current_digit = (render_state ^ RENDER_SCORE) ? high_score[3:0] : score[3:0];
       default: current_digit = 0;
     endcase
   end
 
-  // always @(*) begin
-  //   case (score_digit)
-  //     0: current_digit = (render_state ^ RENDER_SCORE) ? high_score[15:12] : score[15:12];
-  //     1: current_digit = (render_state ^ RENDER_SCORE) ? high_score[11:8] : score[11:8];
-  //     2: current_digit = (render_state ^ RENDER_SCORE) ? high_score[7:4] : score[7:4];
-  //     3: current_digit = (render_state ^ RENDER_SCORE) ? high_score[3:0] : score[3:0];
-  //     default: current_digit = 0;
-  //   endcase
-  // end
-
+  // 读取贴图的坐标
   always @(*) begin
     case (render_state)
       RENDER_SCORE, RENDER_HIGH_SCORE: begin
@@ -226,6 +191,7 @@ module FrameGenerator #(
     endcase
   end
 
+  // 渲染状态机转换
   always @(posedge clk) begin
     if (~rstn) begin
       render_state <= IDLE;
@@ -236,6 +202,7 @@ module FrameGenerator #(
     end
   end
 
+  // 渲染状态机转换
   always @(*) begin
     case (render_state)
       IDLE: begin
@@ -274,17 +241,16 @@ module FrameGenerator #(
       end
       default: begin
         next_render_state = IDLE;
-        next_score_digit = 0;
+        next_score_digit  = 0;
       end
     endcase
   end
 
-
+  // 渲染状态机
   always @(posedge clk) begin
     if (~rstn) begin
       render_x <= 0;
       render_y <= 0;
-      scroll_enabled <= 0;
       vram_we <= 0;
       vram_addr <= 0;
       vram_rgb <= 0;
@@ -425,10 +391,67 @@ module FrameGenerator #(
     end
   end
 
+  
+  vram_bram vram_inst (
+      .clka (clk),
+      .wea  (vram_we),
+      .addra(vram_addr),
+      .dina (vram_rgb),
+
+      .clkb (ram_clk),
+      .addrb(raddr),
+      .doutb(rdata)
+  );
+
+  background #(
+      .ADDR_WIDTH(ADDR_WIDTH),
+      .H_LENGTH  (H_LENGTH),
+      .V_LENGTH  (V_LENGTH)
+  ) background_inst (
+      .clk(clk),
+      .frame_clk(generation_begin),
+      .rstn(rstn),
+      .scroll_enabled(scroll_enabled),
+      .addr(render_addr_next),  //读取rom中的数据的地址
+      .n(n),  //每n个frame_clk
+      .rgb(background_rgb)
+  );
+
+  Rom_Menu menu (
+      .clka(clk),  // input wire clka
+      .addra(render_addr_next),  // input wire [14 : 0] addra
+      .douta(menu_rgb)  // output wire [11 : 0] douta
+  );
+
+  Rom_Gameover gameover (
+      .clka(clk),  // input wire clka
+      .addra(render_addr_next),  // input wire [14 : 0] addra
+      .douta(gameover_rgb)  // output wire [11 : 0] douta
+  );
+
+  // 256x128
+  Rom_Item objects (
+      .clka(ram_clk),  // input wire clka
+      .addra({object_y, object_x}),  // input wire [14 : 0] addra
+      .douta(object_rgb)  // output wire [11 : 0] douta
+  );
+
+  // 256x128
+  Rom_Item_alpha objects_alpha (
+      .clka(ram_clk),  // input wire clka
+      .addra({object_y, object_x}),  // input wire [14 : 0] addra
+      .douta(object_alpha)  // output wire [0 : 0] douta
+  );
+
+  PulseSync #(1) ps (  //frame_clk上升沿
+      .sync_in  (frame_clk),
+      .clk      (clk),
+      .pulse_out(generation_begin)
+  );
+
   initial begin
     render_x = 0;
     render_y = 0;
-    scroll_enabled = 0;
     vram_we = 0;
     vram_addr = 0;
     vram_rgb = 0;

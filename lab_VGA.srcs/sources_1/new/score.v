@@ -4,10 +4,14 @@ module Score (
     input frame_clk,
     input rstn,
     input [1:0] game_state,
+    input [7:0] n,
 
     output reg [15:0] score,
     output reg [15:0] high_score
 );
+
+  wire [7:0] count;  // 计数器
+
   initial begin
     score = 16'h0000;
     high_score = 16'h0000;
@@ -18,7 +22,7 @@ module Score (
     if (!rstn) begin
       score <= 16'h0000;
       //   high_score <= 16'h0000;
-    end else begin
+    end else if (count == 0) begin
       case (game_state)
         2'b01: begin
           if (score[3:0] == 4'h9) begin
@@ -51,4 +55,12 @@ module Score (
       endcase
     end
   end
+
+  Counter #(8, 255) counter (  // 每个frame_clk计数器减1
+      .clk       (frame_clk),
+      .rstn      (rstn),
+      .load_value(n - 1),
+      .enable    (1),
+      .count     (count)
+  );
 endmodule
