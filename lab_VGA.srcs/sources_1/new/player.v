@@ -12,15 +12,15 @@ module Player #(
     input clk,
     input frame_clk,
     input rstn,
-    input [H_LENGTH-1:0] addr_x,  //输入起始中心x坐标
-    input [V_LENGTH-1:0] addr_y,  //输入起始中心y坐标
+    input [$clog2(H_LENGTH)-1:0] addr_x,  //输入起始中心x坐标
+    input [$clog2(V_LENGTH)-1:0] addr_y,  //输入起始中心y坐标
     input [127:0] key_state,
     input enable_scroll,    //借用一下，实现暂停功能
     input collision,       //碰撞信号
     input [7:0] n,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
 
-    output reg [H_LENGTH-1:0] loc_x, //x位置
-    output reg [V_LENGTH-1:0] loc_y  //y位置
+    output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
+    output reg [$clog2(V_LENGTH)-1:0] loc_y  //y位置
 );
 reg  arrow; //判断左右移动方向，取1为左,取0为右
 reg  [7:0] speed_x;  

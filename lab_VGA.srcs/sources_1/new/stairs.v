@@ -10,37 +10,32 @@ module Stairs#(
     input enable_scroll,   //借用一下，实现暂停功能
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
 
-    output reg [18:0] Stair_state //特定台阶编号的台阶状态 
+    output reg [1:0] Stair_state, //特定台阶编号的台阶状态
+    output reg [H_LENGTH-1:0] loc_x, //x位置
+    output reg [V_LENGTH-1:0] loc_y  //y位置
 ); 
-wire [7:0] count_y;
-wire [6:0] find;
+wire [3:0] count_1;
+wire [6:0] num;
 wire [3:0] count;  // 计数器
-reg  [3:0] state [18:0];// state[00,H_LENGTH,V_LENGTH] 状态数组，定义一共16块台阶的状态和坐标，“00”表示空闲，“01”第一类台阶，以此类推
+wire [H_LENGTH:0] state_x [3:0];  // state[00,H_LENGTH,V_LENGTH] 状态数组，定义一共16块台阶的状态和坐标，“00”表示空闲，“01”第一类台阶，以此类推
+wire [V_LENGTH:0] state_y [3:0];
+wire [1:0] state_mark [3:0];
 
-// 在每个frame_clk上升沿更新台阶状态
-always @(posedge frame_clk) begin
-    if (rstn) begin
-        
-    end
-    if (count_y == 0) begin  // 计数器为零，y轴移动
-        
-        Stair_state <= state;
-    end
-end
-
-Counter #(4, 31) counter_y (// 每个clk计数器减1
-  .clk       (frame_clk),
-  .rstn      (rstn),
-  .load_value(n - 1),
-  .enable    (enable_scroll),
-  .count     (count_y)
+SingleStair single0 (
+    .clk(clk),
+    .frame_clk(frame_clk),
+    .enable_scroll(enable_scroll),
+    .n(n),
+    .num(0),
+    .loc_x(state_x[0]),
+    .loc_y(state_y[0]),
+    .mark(state_mark[0])
 );
 
-always @(posedge_clk) begin //遍历各台阶状态
-    
+initial begin //初始化
+    loc_x<=0;
+    loc_y<=0;
+    Stair_state<=0;
 end
 
-initial begin //初始化
-    state <= 0;
-end
 endmodule
