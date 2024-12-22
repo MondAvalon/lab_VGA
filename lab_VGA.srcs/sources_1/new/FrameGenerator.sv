@@ -412,8 +412,9 @@ module FrameGenerator #(
       .frame_clk(generation_begin),
       .rstn(rstn),
       .scroll_enabled(scroll_enabled),
-      .addr(render_addr_next),  //读取rom中的数据的地址
+      .addr(render_addr_next+2),  //读取rom中的数据的地址
       .n(n),  //每n个frame_clk
+      .v(1),
       .rgb(background_rgb)
   );
 
