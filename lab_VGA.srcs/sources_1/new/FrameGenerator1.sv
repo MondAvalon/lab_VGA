@@ -103,7 +103,6 @@ module FrameGenerator #(
   // 5. Combinational Next-State Logic
   // -----------------------------
   always @(*) begin
-    next_state = current_state;
     case (current_state)
       S_IDLE: begin
         // 当接收到新一帧的开始信号后，进入绘制背景状态
