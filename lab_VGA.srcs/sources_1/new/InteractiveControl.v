@@ -94,6 +94,10 @@ module Controllor #(
       .high_score(high_score),
       .player_x(100),
       .player_y(75),
+      .boss_x(100),
+      .boss_y(20),
+      .bullet_x(10),
+      .bullet_y(70),
       .raddr(raddr),
       .rdata(rdata)
   );
