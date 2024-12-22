@@ -20,7 +20,8 @@ module Player #(
     input [7:0] n,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
-    output reg [$clog2(H_LENGTH)-1:0] loc_y  //y位置
+    output reg [$clog2(V_LENGTH)-1:0] loc_y  //y位置
+
 );
 reg  arrow; //判断左右移动方向，取1为左,取0为右
 reg  [7:0] speed_x;  

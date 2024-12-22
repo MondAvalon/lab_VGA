@@ -9,8 +9,8 @@ module Mob #(
     input enable_scroll,    //借用一下，实现暂停功能
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
 
-    output reg [H_LENGTH-1:0] loc_x, //x位置
-    output reg [V_LENGTH-1:0] loc_y,  //y位置
+    output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
+    output reg [$clog2(V_LENGTH)-1:0] loc_y,  //y位置
     output reg finish //触底信号
 );
 reg  arrow; //判断左右移动方向，取1为左,取0为右 
@@ -33,10 +33,10 @@ always @(posedge frame_clk) begin
 end
 
 always @(posedge frame_clk) begin //触左右壁、触底
-    if (loc_y == (V_LENGTH-1)) begin
+    if (loc_y == ($clog2(V_LENGTH)-1)) begin
         finish <= 1;
     end
-    if ((loc_x == H_LENGTH-1) || (loc_x == 1)) begin
+    if ((loc_x == $clog2(H_LENGTH)-1) || (loc_x == 1)) begin
         arrow <= ~arrow;
     end
 end
