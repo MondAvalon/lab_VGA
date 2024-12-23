@@ -14,7 +14,7 @@ module Player #(
     input rstn,
     input [127:0] key_state,
     input enable_scroll,    //借用一下，实现暂停功能
-    input collision,       //碰撞信号
+    input [2:0] collision ,       //碰撞信号
     input [7:0] n_count,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
@@ -72,7 +72,7 @@ end
 
 //更新当前y方向速度，根据collision确定碰撞
 always @(posedge frame_clk) begin
-    if (collision || (loc_y>V_LENGTH-16 && ~speed_y[$clog2(V_LENGTH)-1])) begin
+    if ((collision[1] == 1'b1)|| (loc_y>V_LENGTH-16 && ~speed_y[$clog2(V_LENGTH)-1])) begin
         speed_y <= -speed_y;
     end else if(n_count == 0) begin
         if (speed_y == 10) begin
