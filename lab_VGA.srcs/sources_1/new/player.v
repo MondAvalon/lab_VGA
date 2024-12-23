@@ -21,7 +21,8 @@ module Player #(
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
     output reg [$clog2(V_LENGTH)-1:0] loc_y,  //y位置
-    output reg [1:0] player_anime_state //玩家动画状态
+    output reg [1:0] player_anime_state, //玩家动画状态
+    output reg [$clog2(V_LENGTH)-1:0] Speed_y
 );
 reg  arrow; //判断左右移动方向，取1为左,取0为右
 reg  [3:0] speed_x;
@@ -34,6 +35,11 @@ always @(posedge frame_clk) begin
     if (!rstn) begin
         loc_x <= addr_x;
         loc_y <= addr_y;
+        Speed_y <= 0;
+        arrow <= 0;
+        speed_x <= 0;
+        speed_y <= 0;
+        player_anime_state <= 0;
     end 
     else begin
       if (count_y == 0) begin  // 计数器为零，y轴移动
@@ -46,6 +52,7 @@ always @(posedge frame_clk) begin
         else begin
             loc_x <= (loc_x - speed_x) % H_LENGTH;
         end
+        Speed_y <= speed_y;
       end
     end
 end
@@ -99,6 +106,7 @@ initial begin //初始化
     speed_x <= 0;
     speed_y <= 0;
     player_anime_state <= 0;
+    Speed_y <= 0;
 end
 
 endmodule

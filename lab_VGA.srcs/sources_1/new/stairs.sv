@@ -14,9 +14,6 @@ module Stairs#(
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
     output reg [$clog2(V_LENGTH)-1:0] loc_y  //y位置
 ); 
-wire [3:0] count_1;
-wire [6:0] num;
-wire [3:0] count;  // 计数器
 wire [$clog2(H_LENGTH)-1:0] state_x [3:0];  // state[00,$clog2(H_LENGTH)-1,$clog2(V_LENGTH)-1] 状态数组，定义一共16块台阶的状态和坐标，“00”表示空闲，“01”第一类台阶，以此类推
 wire [$clog2(V_LENGTH)-1:0] state_y [3:0];
 wire [1:0] state_mark [3:0];
