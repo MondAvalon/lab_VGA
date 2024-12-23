@@ -4,12 +4,10 @@ module Player #(
     parameter SPEED_X = 2,
     parameter signed BUNCE_V = -3,  //回弹初速度
     parameter G_CONST = 1,  //重力加速度
-    parameter X_WHITH = 30,  //物体宽
-    parameter Y_WHITH = 36,  //物体长
-    parameter H_LENGTH  = 200, //宽度
-    parameter V_LENGTH  = 150,  //高度
     parameter addr_x = 100,  //输入起始中心x坐标
-    parameter addr_y = 75  //输入起始中心y坐标
+    parameter addr_y = 75,  //输入起始中心y坐标
+    parameter H_LENGTH  = 200, //宽度
+    parameter V_LENGTH  = 150  //高度
 )(
     input clk,
     input frame_clk,
@@ -24,6 +22,9 @@ module Player #(
     output reg [1:0] player_anime_state, //玩家动画状态
     output reg [$clog2(V_LENGTH)-1:0] Speed_y
 );
+parameter X_WHITH = 30;  //物体宽
+parameter Y_WHITH = 36;  //物体长
+
 reg  arrow; //判断左右移动方向，取1为左,取0为右
 reg  [3:0] speed_x;
 reg signed [$clog2(V_LENGTH)-1:0] speed_y;

@@ -24,6 +24,7 @@ module Controllor #(
 );
   wire pclk;
   wire clk_25mhz;
+  wire clk_5mhz;
   wire [11:0] rdata;
   wire [ADDR_WIDTH-1:0] raddr;
   wire [ADDR_WIDTH-1:0] render_addr;
@@ -46,6 +47,7 @@ module Controllor #(
   pclk pixel_clock_inst (
       .clk_out1(pclk),
       .clk_out2(clk_25mhz),
+      .clk_out3(clk_5mhz),  
       .reset   (~rstn),
       .locked  (),
       .clk_in1 (clk)
@@ -69,7 +71,7 @@ module Controllor #(
 
   // 游戏逻辑
   Game game_logic_inst (
-      .clk(clk_25mhz),
+      .clk(clk_5mhz),
       .frame_clk(VGA_VS),
       .rstn(rstn),
       .render_addr(render_addr),

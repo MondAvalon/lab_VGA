@@ -19,7 +19,7 @@ module background #(
   reg [ADDR_WIDTH-1:0] offset;  // 偏移量
   reg [ADDR_WIDTH-1:0] offset_1;
   wire [7:0] count;  // 计数器
-  wire [7:0] count_1;  // 前景计数器
+  // wire [7:0] count_1;  // 前景计数器
   wire alpha_1;
   wire [11:0] rgb_0;
   wire [11:0] rgb_1;
