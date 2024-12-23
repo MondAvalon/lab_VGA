@@ -2,7 +2,8 @@
 module FrameGenerator #(
     parameter ADDR_WIDTH = 15,
     parameter H_LENGTH   = 200,
-    parameter V_LENGTH   = 150
+    parameter V_LENGTH   = 150,
+    parameter MAX_BULLET = 5
 ) (
     input ram_clk,
     input clk,
@@ -15,6 +16,7 @@ module FrameGenerator #(
     input [7:0] n,
     output [ADDR_WIDTH-1:0] render_addr,
     output reg [3:0] stair_index,
+    output reg [$clog2(MAX_BULLET)-1:0] bullet_index,
     input [15:0] score,
     input [15:0] high_score,
     input [$clog2(H_LENGTH)-1:0] player_x,
@@ -339,12 +341,19 @@ module FrameGenerator #(
         RENDER_BULLET: begin
           vram_we  <= 1;
           vram_rgb <= object_alpha ? object_rgb : background_rgb;
-          // vram_rgb <= object_rgb;
           if (!(render_x ^ bullet_x_right)) begin
             if (!(render_y ^ bullet_y_down)) begin
-              // next_render_state <= RENDER_PLAYER;
-              render_x <= player_x_left;
-              render_y <= player_y_up;
+              if (bullet_index == MAX_BULLET - 1) begin
+                // All bullets rendered, move to player
+                render_x <= player_x_left;
+                render_y <= player_y_up;
+                bullet_index <= 0;
+              end else begin
+                // Move to next bullet
+                bullet_index <= bullet_index + 1;
+                render_x <= bullet_x_left;
+                render_y <= bullet_y_up;
+              end
             end else begin
               render_x <= bullet_x_left;
               render_y <= render_y + 1;
@@ -391,7 +400,7 @@ module FrameGenerator #(
     end
   end
 
-  
+
   vram_bram vram_inst (
       .clka (clk),
       .wea  (vram_we),
@@ -412,7 +421,7 @@ module FrameGenerator #(
       .frame_clk(generation_begin),
       .rstn(rstn),
       .scroll_enabled(scroll_enabled),
-      .addr(render_addr_next+2),  //读取rom中的数据的地址
+      .addr(render_addr_next + 2),  //读取rom中的数据的地址
       .n(n),  //每n个frame_clk
       .v(1),
       .rgb(background_rgb)

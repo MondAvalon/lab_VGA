@@ -22,22 +22,23 @@ module Game #(
     output reg [7:0] n,
     output [$clog2(H_LENGTH)-1:0] player_x,
     output [$clog2(V_LENGTH)-1:0] player_y,
-    output [$clog2(H_LENGTH)-1:0] boss_x,
-    output [$clog2(V_LENGTH)-1:0] boss_y,
+    output [$clog2(H_LENGTH)-1:0] enemy_x,
+    output [$clog2(V_LENGTH)-1:0] enemy_y,
     output [$clog2(H_LENGTH)-1:0] bullet_x,
     output [$clog2(V_LENGTH)-1:0] bullet_y
 );
 
   // wire [$clog2(H_LENGTH)-1:0] next_player_x;
   // wire [$clog2(V_LENGTH)-1:0] next_player_y;
-  // wire [$clog2(H_LENGTH)-1:0] next_boss_x;
-  // wire [$clog2(V_LENGTH)-1:0] next_boss_y;
+  // wire [$clog2(H_LENGTH)-1:0] next_enemy_x;
+  // wire [$clog2(V_LENGTH)-1:0] next_enemy_y;
   // wire [$clog2(H_LENGTH)-1:0] next_bullet_x;
   // wire [$clog2(V_LENGTH)-1:0] next_bullet_y;
+  wire [7:0] n_count;
 
   // test
-  assign boss_x = 100;
-  assign boss_y = 20;
+  assign enemy_x = 100;
+  assign enemy_y = 20;
   assign bullet_x = 10;
   assign bullet_y = 20;
 
@@ -46,6 +47,8 @@ module Game #(
   localparam GAME_MENU = 2'b00;
   localparam GAME_PLAYING = 2'b01;
   localparam GAME_OVER = 2'b10;
+
+  localparam MAX_BULLET = 5;
 
   reg [1:0] next_game_state;
 
@@ -99,7 +102,7 @@ module Game #(
       .frame_clk(frame_clk),
       .rstn(rstn),
       .game_state(game_state),
-      .n(n),
+      .n_count(n_count),
 
       .score(score),
       .high_score(high_score)
@@ -112,11 +115,41 @@ module Game #(
       .key_state(0),
       .enable_scroll(enable_scroll),
       .collision(0),
-      .n(n),
+      .n_count(n_count),
 
       .loc_x(player_x),
       .loc_y(player_y)
   );
+
+  Bullet #(
+      .MAX_BULLET(MAX_BULLET)
+  ) bullet_inst (
+      .clk(clk),
+      .frame_clk(frame_clk),
+      .rstn(rstn),
+      .shoot(shoot),
+      .player_x(player_x),
+      .player_y(player_y),
+      .enemy_x(enemy_x),
+      .enemy_y(enemy_y),
+      .n_count(n_count),
+      .lookup_i(bullet_lookup_i),
+      .collision(),
+
+      .x_out(bullet_x),
+      .y_out(bullet_y)
+  );
+
+  assign enemy_x = 100;
+  assign enemy_y = 20;
+
+  Counter #(8, 255) counter (// 每个frame_clk计数器减1
+  .clk       (frame_clk),
+  .rstn      (rstn),
+  .load_value(n - 1),
+  .enable    (enable_scroll),
+  .count     (n_count)
+);
 
   initial begin
     enable_scroll = 1;
