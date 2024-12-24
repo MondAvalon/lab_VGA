@@ -25,6 +25,7 @@ module FrameGenerator #(
     input [$clog2(V_LENGTH)-1:0] boss_y,
     input [$clog2(H_LENGTH)-1:0] bullet_x,
     input [$clog2(V_LENGTH)-1:0] bullet_y,
+    input [$clog2(H_LENGTH)-1:0] bullet_display,
     input [$clog2(H_LENGTH)-1:0] stair_x,
     input [$clog2(V_LENGTH)-1:0] stair_y,
 
@@ -32,6 +33,9 @@ module FrameGenerator #(
     input [ADDR_WIDTH-1:0] raddr,
     output [11:0] rdata
 );
+
+  localparam X_MAX = H_LENGTH - 1;
+  localparam Y_MAX = V_LENGTH - 1;
 
   typedef enum {
     GAME_MENU,
@@ -113,8 +117,8 @@ module FrameGenerator #(
   wire [ADDR_WIDTH-1:0] render_addr_next = render_addr + 1;
 
   // 显示坐标常量
-  localparam X_MAX = H_LENGTH - 1;
-  localparam Y_MAX = V_LENGTH - 1;
+
+  localparam ADDR_MAX = H_LENGTH * V_LENGTH - 1;
   localparam [7:0] SCORE_POS_X[0:3] = {8'd0, 8'd10, 8'd20, 8'd30};
   localparam SCORE_POS_Y = 140;
   localparam [7:0] HIGH_SCORE_POS_X[0:3] = {8'd0, 8'd10, 8'd20, 8'd30};
@@ -193,14 +197,18 @@ module FrameGenerator #(
     endcase
   end
 
+  // reg [$clog2(MAX_BULLET)-1:0] next_bullet_index;
+
   // 渲染状态机转换
   always @(posedge clk) begin
     if (~rstn) begin
       render_state <= IDLE;
       score_digit  <= 0;
+      // bullet_index <= 0;
     end else begin
       render_state <= next_render_state;
       score_digit  <= next_score_digit;
+      // bullet_index <= next_bullet_index;
     end
   end
 
@@ -231,9 +239,15 @@ module FrameGenerator #(
                             score_digit;
       end
       RENDER_BULLET: begin
-        next_render_state = !(render_x ^ bullet_x_right) && !(render_y ^ bullet_y_down) ? 
+        next_render_state = (!(render_x ^ bullet_x_right) &&
+                             !(render_y ^ bullet_y_down) && 
+                             bullet_index==MAX_BULLET-1) ? 
                             RENDER_PLAYER : 
                             RENDER_BULLET;
+        // if (render_x == bullet_x_right && render_y == bullet_y_down) begin
+        //   if (bullet_index == MAX_BULLET-1) next_bullet_index = 0;
+        //   else next_bullet_index = bullet_index + 1;
+        // end
       end
       RENDER_PLAYER: begin
         next_render_state = !(render_x ^ player_x_right) && !(render_y ^ player_y_down) ? RENDER_BOSS : RENDER_PLAYER;
@@ -270,6 +284,12 @@ module FrameGenerator #(
         RENDER_BACKGROUND: begin
           vram_we <= 1;
           vram_rgb <= ((game_state^GAME_MENU))?((game_state^GAME_PLAYING)?gameover_rgb:background_rgb ):menu_rgb;
+          // case (game_state)
+          //   GAME_PLAYING: vram_rgb <= background_rgb;
+          //   GAME_MENU: vram_rgb <= menu_rgb;
+          //   GAME_OVER: vram_rgb <= gameover_rgb;
+          //   default: vram_rgb <= 0;
+          // endcase
 
           if (!(render_x ^ X_MAX)) begin
             if (!(render_y ^ Y_MAX)) begin  //完成全部背景的渲染
@@ -291,9 +311,9 @@ module FrameGenerator #(
           end
         end
         RENDER_SCORE: begin
-          vram_we  <= 1;
-          vram_rgb <= object_alpha ? object_rgb : background_rgb;
-          // vram_rgb <= object_rgb;
+          vram_we  <= object_alpha;
+          // vram_rgb <= object_alpha ? object_rgb : background_rgb;
+          vram_rgb <= object_rgb;
           if (!(render_x ^ SCORE_POS_X_MAX[score_digit])) begin
             if (!(render_y ^ SCORE_POS_Y_MAX)) begin  // 完成一个数字渲染
               if (!(score_digit ^ 3)) begin  // 完成所有数字
@@ -316,8 +336,8 @@ module FrameGenerator #(
           end
         end
         RENDER_HIGH_SCORE: begin
-          vram_rgb <= object_alpha ? object_rgb : game_state == GAME_MENU ? menu_rgb : gameover_rgb;
-          vram_we <= 1;
+          vram_rgb <= object_rgb;
+          vram_we <= object_alpha;
           // vram_rgb <= object_rgb;
           if (!(render_x ^ HIGH_SCORE_POS_X_MAX[score_digit])) begin
             if (!(render_y ^ HIGH_SCORE_POS_Y_MAX)) begin  // 完成一个数字渲染
@@ -339,22 +359,22 @@ module FrameGenerator #(
           end
         end
         RENDER_BULLET: begin
-          vram_we  <= 1;
-          vram_rgb <= object_alpha ? object_rgb : background_rgb;
+          vram_we <= object_alpha&& bullet_display;
+          vram_rgb <= object_rgb;
+          // if (render_addr >= 0 && render_addr <= ADDR_MAX)
+          //   vram_rgb <= bullet_display ? object_rgb : background_rgb;
           if (!(render_x ^ bullet_x_right)) begin
             if (!(render_y ^ bullet_y_down)) begin
-              if (bullet_index == MAX_BULLET - 1) begin
-                // All bullets rendered, move to player
+              if (!(bullet_index ^ (MAX_BULLET - 1))) begin  // All bullets rendered, move to player
                 render_x <= player_x_left;
                 render_y <= player_y_up;
                 bullet_index <= 0;
-              end else begin
-                // Move to next bullet
+              end else begin  // Move to next bullet
                 bullet_index <= bullet_index + 1;
                 render_x <= bullet_x_left;
                 render_y <= bullet_y_up;
               end
-            end else begin
+            end else begin  //下一行
               render_x <= bullet_x_left;
               render_y <= render_y + 1;
             end
@@ -363,9 +383,9 @@ module FrameGenerator #(
           end
         end
         RENDER_PLAYER: begin
-          vram_we  <= 1;
-          // vram_rgb <= object_alpha ? object_rgb : background_rgb;
+          vram_we  <= object_alpha;
           vram_rgb <= object_rgb;
+          // vram_rgb <= object_rgb;
           if (!(render_x ^ player_x_right)) begin
             if (!(render_y ^ player_y_down)) begin
               // next_render_state <= RENDER_BOSS;
@@ -380,8 +400,8 @@ module FrameGenerator #(
           end
         end
         RENDER_BOSS: begin
-          vram_we  <= 1;
-          vram_rgb <= object_alpha ? object_rgb : background_rgb;
+          vram_we  <= object_alpha;
+          vram_rgb <= object_rgb;
           // vram_rgb <= object_rgb;
           if (!(render_x ^ boss_x_right)) begin
             if (!(render_y ^ boss_y_down)) begin
@@ -418,10 +438,10 @@ module FrameGenerator #(
       .V_LENGTH  (V_LENGTH)
   ) background_inst (
       .clk(clk),
-      .frame_clk(generation_begin),
+      .frame_clk(frame_clk),
       .rstn(rstn),
       .scroll_enabled(scroll_enabled),
-      .addr(render_addr_next + 2),  //读取rom中的数据的地址
+      .addr(render_addr_next + 1),  //读取rom中的数据的地址
       .n(n),  //每n个frame_clk
       .v(1),
       .rgb(background_rgb)
@@ -441,14 +461,14 @@ module FrameGenerator #(
 
   // 256x128
   Rom_Item objects (
-      .clka(ram_clk),  // input wire clka
+      .clka(clk),  // input wire clka
       .addra({object_y, object_x}),  // input wire [14 : 0] addra
       .douta(object_rgb)  // output wire [11 : 0] douta
   );
 
   // 256x128
   Rom_Item_alpha objects_alpha (
-      .clka(ram_clk),  // input wire clka
+      .clka(clk),  // input wire clka
       .addra({object_y, object_x}),  // input wire [14 : 0] addra
       .douta(object_alpha)  // output wire [0 : 0] douta
   );
@@ -473,6 +493,8 @@ module FrameGenerator #(
     current_digit = 0;
     object_y = 0;
     object_x = 0;
+    bullet_index = 0;
+    // next_bullet_index = 0;
   end
 
 endmodule

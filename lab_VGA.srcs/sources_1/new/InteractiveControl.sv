@@ -2,7 +2,8 @@
 module Controllor #(
     parameter ADDR_WIDTH = 15,
     parameter H_LENGTH   = 200,
-    parameter V_LENGTH   = 150
+    parameter V_LENGTH   = 150,
+    parameter MAX_BULLET = 5
 ) (
     input clk,
     input rstn,
@@ -40,14 +41,32 @@ module Controllor #(
   wire [$clog2(V_LENGTH)-1:0] boss_y;
   wire [$clog2(H_LENGTH)-1:0] bullet_x;
   wire [$clog2(V_LENGTH)-1:0] bullet_y;
+  wire [$clog2(MAX_BULLET)-1:0] bullet_index;
+  wire bullet_display;
 
+  reg clk_72hz = 0;
+  reg [15:0] counter_72hz = 0;
+  localparam DIVIDER_72HZ = 16'd34722;  // 5MHz / 72Hz / 2
 
+  always @(posedge clk_5mhz) begin
+    if (!rstn) begin
+      counter_72hz <= 0;
+      clk_72hz <= 0;
+    end else begin
+      if (counter_72hz >= DIVIDER_72HZ - 1) begin
+        counter_72hz <= 0;
+        clk_72hz <= ~clk_72hz;
+      end else begin
+        counter_72hz <= counter_72hz + 1;
+      end
+    end
+  end
 
   // 像素时钟
   pclk pixel_clock_inst (
       .clk_out1(pclk),
       .clk_out2(clk_25mhz),
-      .clk_out3(clk_5mhz),  
+      .clk_out3(clk_5mhz),
       .reset   (~rstn),
       .locked  (),
       .clk_in1 (clk)
@@ -61,7 +80,7 @@ module Controllor #(
       .btnl(btnl),
       .btnr(btnr),
       .btnu(btnu),
-      .btnd(BTND),
+      .btnd(btnd),
 
       .left (left),
       .right(right),
@@ -70,8 +89,8 @@ module Controllor #(
   );
 
   // 游戏逻辑
-  Game game_logic_inst (
-      .clk(clk_5mhz),
+  Game game_inst (
+      .clk(pclk),
       .frame_clk(VGA_VS),
       .rstn(rstn),
       .render_addr(render_addr),
@@ -82,16 +101,18 @@ module Controllor #(
 
       // output in-game object x, y, priority, color
       .game_state(game_state),
+      .bullet_lookup_i(bullet_index),
       .score(score),
       .high_score(high_score),
       .enable_scroll(enable_scroll),
       .n(n),
       .player_x(player_x),
       .player_y(player_y),
-      .boss_x(boss_x),
-      .boss_y(boss_y),
+      .enemy_x(boss_x),
+      .enemy_y(boss_y),
       .bullet_x(bullet_x),
-      .bullet_y(bullet_y)
+      .bullet_y(bullet_y),
+      .bullet_display(bullet_display)
   );
 
   // 帧生成
@@ -107,6 +128,7 @@ module Controllor #(
 
       //input in-game .x, .y, .priority, .color
       .game_state(game_state),
+      .bullet_index(bullet_index),
       .scroll_enabled(enable_scroll),
       .n(n),
       .render_addr(render_addr),
@@ -118,6 +140,7 @@ module Controllor #(
       .boss_y(boss_y),
       .bullet_x(bullet_x),
       .bullet_y(bullet_y),
+      .bullet_display(bullet_display),
       .raddr(raddr),
       .rdata(rdata)
   );

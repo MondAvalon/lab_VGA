@@ -1,10 +1,10 @@
 module Bullet #(
     parameter ADDR_WIDTH = 15,
-    parameter signed V_SPEED = -4,  //子弹速度
+    parameter signed V_SPEED = 2,  //子弹速度
     parameter H_LENGTH = 200,  //画布宽度
     parameter V_LENGTH = 150,  //画布高度
     parameter MAX_BULLET = 5,  //最大子弹数
-    parameter COLLISION_THRESHOLD = 21  // 曼哈顿距离碰撞阈值
+    parameter COLLISION_THRESHOLD = 20  // 曼哈顿距离碰撞阈值
 ) (
     input clk,
     input frame_clk,
@@ -14,7 +14,7 @@ module Bullet #(
     input [$clog2(H_LENGTH)-1:0] enemy_x,  //敌人位置
     input [$clog2(H_LENGTH)-1:0] enemy_y,
     input shoot,  //是否发射子弹
-    input enable,
+    // input enable,
     input [7:0] n_count,
     input [$clog2(MAX_BULLET)-1:0] lookup_i,  //子弹编号
 
@@ -23,13 +23,6 @@ module Bullet #(
     output display_out,  //子弹是否存在
     output reg [$clog2(MAX_BULLET)-1:0] collision  //是否碰撞
 );
-  //   localparam X_WHITH = 9;  //物体宽
-  //   localparam Y_WHITH = 24;  //物体长
-
-
-  //   reg [$clog2(H_LENGTH)-1:0] x           [MAX_BULLET];  //子弹中心坐标
-  //   reg [$clog2(H_LENGTH)-1:0] y           [MAX_BULLET];
-  //   reg                        display     [MAX_BULLET];  //子弹是否存在
 
   reg [$clog2(H_LENGTH)-1:0] x      [MAX_BULLET];
   reg [$clog2(H_LENGTH)-1:0] y      [MAX_BULLET];
@@ -38,72 +31,68 @@ module Bullet #(
   assign x_out = x[lookup_i];
   assign y_out = y[lookup_i];
   assign display_out = display[lookup_i];
+  // assign x_out = 100;
+  // assign y_out = 50;
+  // assign display_out = 1;
 
-  //   always @(posedge frame_clk) begin
-  //     if (!rstn) begin
-  //       for (int i = 0; i < MAX_BULLET; i = i + 1) begin
-  //         x[i] <= 0;
-  //         y[i] <= 0;
-  //         display[i] <= 0;
-  //       end
-  //     end else begin
-  //       for (int i = 0; i < MAX_BULLET; i = i + 1) begin
-  //         x[i] <= x[i];
-  //         y[i] <= y[i];
-  //         display[i] <= display[i];
-  //       end
-  //     end
-  //   end
+  reg [5:0] shoot_cd;
 
-  always @(posedge frame_clk) begin
-    for (int i = 0; i < MAX_BULLET; i = i + 1) begin
-      x[i] <= x[i];
-      y[i] <= y[i];
-      display[i] <= display[i];
-      collision[i] <= 0;
-
-      // 使用曼哈顿距离检测碰撞
-      if (display[i]) begin
-        if (((x[i] > enemy_x ? x[i] - enemy_x : enemy_x - x[i]) + 
-             (y[i] > enemy_y ? y[i] - enemy_y : enemy_y - y[i])) <= COLLISION_THRESHOLD) begin
-          display[i]   <= 0;  // 发生碰撞,子弹消失
-          collision[i] <= 1;
-        end
-      end
-    end
-
-    if (enable && shoot) begin
-      for (int i = 0; i < MAX_BULLET; i = i + 1) begin
-        if (!display[i]) begin
-          x[i] <= player_x;
-          y[i] <= player_y;
-          display[i] <= 1;
-          break;
-        end
-      end
-    end
-  end
-
-  always @(posedge frame_clk) begin
+  always_ff @(posedge frame_clk) begin
     if (!rstn) begin
+      shoot_cd  <= 0;
+      collision <= 0;
       for (int i = 0; i < MAX_BULLET; i = i + 1) begin
+        x[i] <= 0;
         y[i] <= 0;
+        display[i] <= 0;
       end
     end else begin
+      // 冷却时间更新
+      if (shoot_cd > 0) shoot_cd <= shoot_cd - 1;
+      else if (shoot) shoot_cd <= 30;
+
+      // 重置碰撞状态
+      collision <= 0;
+
+      // 子弹状态更新
       for (int i = 0; i < MAX_BULLET; i = i + 1) begin
         if (display[i]) begin
-          y[i] <= y[i] + V_SPEED;
+          // 更新位置
+          y[i] <= y[i] - V_SPEED;
+
+          // 碰撞检测和边界检测
+          if (y[i] < 10 || ((x[i] > enemy_x ? x[i] - enemy_x : enemy_x - x[i]) + 
+                       (y[i] > enemy_y ? y[i] - enemy_y : enemy_y - y[i])) <= COLLISION_THRESHOLD) begin
+            display[i] <= 0;
+            if ((x[i] > enemy_x ? x[i] - enemy_x : enemy_x - x[i]) + 
+                           (y[i] > enemy_y ? y[i] - enemy_y : enemy_y - y[i]) <= COLLISION_THRESHOLD) begin
+              collision <= 1;
+            end
+          end
+        end
+      end
+
+      // 发射新子弹
+      if (shoot && shoot_cd) begin
+        for (int i = 0; i < MAX_BULLET; i = i + 1) begin
+          if (!display[i]) begin
+            x[i] <= player_x;
+            y[i] <= player_y;
+            display[i] <= 1;
+            break;
+          end
         end
       end
     end
   end
 
-  initial begin
-    for (int i = 0; i < MAX_BULLET; i = i + 1) begin
-      x[i] = 0;
-      y[i] = 0;
-      display[i] = 0;
-    end
-  end
+  //   initial begin
+  //     for (int i = 0; i < MAX_BULLET; i = i + 1) begin
+  //       x[i] = 0;
+  //       y[i] = 0;
+  //       display[i] = 0;
+  //       collision = 0;
+  //     end
+  //   end
 
 endmodule

@@ -36,7 +36,6 @@ module background #(
       if (offset + H_LENGTH * v >= MAX_OFFSET) offset <= offset + H_LENGTH * v - MAX_OFFSET;
       else offset <= offset + H_LENGTH * v;
 
-
       if (offset_1 + H_LENGTH * v_1 >= MAX_OFFSET)
         offset_1 <= offset_1 + H_LENGTH * v_1 - MAX_OFFSET;
       else offset_1 <= offset_1 + H_LENGTH * v_1;
