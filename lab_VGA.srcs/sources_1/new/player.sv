@@ -47,10 +47,18 @@ always @(posedge frame_clk) begin
       
       
         if (arrow) begin
-            loc_x <= (loc_x + speed_x) % H_LENGTH;
+            if (loc_x>(H_LENGTH-20)) begin
+                loc_x <= 20;
+            end else begin
+                loc_x <= (loc_x + speed_x);
+            end
         end
         else begin
-            loc_x <= (loc_x - speed_x) % H_LENGTH;
+            if (loc_x<20) begin
+                loc_x <= (H_LENGTH-20);
+            end else begin
+                loc_x <= (loc_x - speed_x);
+            end
         end
         Speed_y <= speed_y;
       end
