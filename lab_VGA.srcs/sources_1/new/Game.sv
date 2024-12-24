@@ -1,7 +1,8 @@
 module Game #(
     parameter ADDR_WIDTH = 15,
     parameter H_LENGTH   = 200,
-    parameter V_LENGTH   = 150
+    parameter V_LENGTH   = 150,
+    parameter MAX_BULLET = 5
 ) (
     input clk,
     input rstn,
@@ -16,6 +17,7 @@ module Game #(
 
     output reg [1:0] game_state,  //游戏状态
     // output in-game object x, y, priority
+    input [$clog2(MAX_BULLET)-1:0] bullet_lookup_i,
     output [15:0] score,
     output [15:0] high_score,
     output reg enable_scroll,
@@ -25,7 +27,8 @@ module Game #(
     output [$clog2(H_LENGTH)-1:0] enemy_x,
     output [$clog2(V_LENGTH)-1:0] enemy_y,
     output [$clog2(H_LENGTH)-1:0] bullet_x,
-    output [$clog2(V_LENGTH)-1:0] bullet_y
+    output [$clog2(V_LENGTH)-1:0] bullet_y,
+    output bullet_display
 );
 
   // wire [$clog2(H_LENGTH)-1:0] next_player_x;
@@ -39,16 +42,15 @@ module Game #(
   // test
   assign enemy_x = 100;
   assign enemy_y = 20;
-  assign bullet_x = 10;
-  assign bullet_y = 20;
+  // assign bullet_x = 10;
+  // assign bullet_y = 30;
+  // assign bullet_display = 0;
 
   // 状态机测试代码，需要具体修改
   // Game state definitions
   localparam GAME_MENU = 2'b00;
   localparam GAME_PLAYING = 2'b01;
   localparam GAME_OVER = 2'b10;
-
-  localparam MAX_BULLET = 5;
 
   reg [1:0] next_game_state;
 
@@ -127,6 +129,7 @@ module Game #(
       .clk(clk),
       .frame_clk(frame_clk),
       .rstn(rstn),
+//      .enable(!(game_state^GAME_PLAYING)),
       .shoot(shoot),
       .player_x(player_x),
       .player_y(player_y),
@@ -137,11 +140,9 @@ module Game #(
       .collision(),
 
       .x_out(bullet_x),
-      .y_out(bullet_y)
+      .y_out(bullet_y),
+      .display_out(bullet_display)
   );
-
-  assign enemy_x = 100;
-  assign enemy_y = 20;
 
   Counter #(8, 255) counter (// 每个frame_clk计数器减1
   .clk       (frame_clk),
@@ -153,7 +154,7 @@ module Game #(
 
   initial begin
     enable_scroll = 1;
-    n = 2;
+    n = 4;
   end
 
 endmodule
