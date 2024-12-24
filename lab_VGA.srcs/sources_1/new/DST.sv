@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 // 递减计数器模块
 module Counter #(
     parameter WIDTH       = 16,
@@ -17,6 +18,7 @@ module Counter #(
       else count <= count - 1;
     end else count <= count;
   end
+  initial count = RESET_VALUE;
 endmodule
 
 module DisplaySyncTiming (

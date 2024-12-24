@@ -45,9 +45,9 @@ module Game #(
   // test
   assign enemy_x = 100;
   assign enemy_y = 20;
-  assign stair_display = {1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2};
-  assign stair_x = {15, 20, 25, 30, 35, 35, 35, 35, 55, 55, 55, 55, 175, 175, 175, 175};
-  assign stair_y = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 10, 20};
+  // assign stair_display = {1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2};
+  // assign stair_x = {20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170};
+  // assign stair_y = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 10, 20};
 
 
 
@@ -156,10 +156,10 @@ module Game #(
       .frame_clk(frame_clk),
       .rstn(rstn),
       .enable_scroll(enable_scroll),
-      .n(n)
-      // .state_x(stair_x),
-      // .state_y(stair_y),
-      // .state_mark(stair_display)
+      .n(n),
+      .state_x(stair_x),
+      .state_y(stair_y),
+      .state_mark(stair_display)
   );
 
   Counter #(8, 255) counter (  // 每个frame_clk计数器减1

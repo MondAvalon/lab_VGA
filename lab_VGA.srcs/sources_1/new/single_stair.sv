@@ -1,11 +1,13 @@
 module SingleStair#(
     parameter H_LENGTH  = 200, //宽度
-    parameter V_LENGTH  = 150  //高度
+    parameter V_LENGTH  = 150,  //高度
+    parameter NUM = 0
 )(
     input clk,
     input frame_clk,
+    input rstn,
     input enable_scroll,    //借用一下，实现暂停功能
-    input [3:0]   num,             // 台阶数字编号
+    // input [3:0]   num,             // 台阶数字编号
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
@@ -13,15 +15,19 @@ module SingleStair#(
     output reg [1:0] mark //台阶分类
 ); 
 wire [7:0] count_y;  // 计数器
-reg  [6:0] randnum;
+reg signed [31:0] randnum;
 
-always @(*) begin
-    randnum = $random(num);
-end
+// always @(posedge frame_clk) begin
+//     if (!rstn)
+//         randnum <= 7'd0;
+//     else
+//         randnum <= $urandom % 256;
+// end
 
 // 在每个frame_clk上升沿更新计数器和偏移量
 always @(posedge frame_clk) begin
-    if (loc_y == ($clog2(V_LENGTH)-1)) begin
+    randnum <= $random(randnum);
+    if (loc_y > V_LENGTH-3) begin
         loc_x <= (100 + randnum % 70);
         loc_y <= 0;
         // finish <= 0;
@@ -34,7 +40,10 @@ always @(posedge frame_clk) begin
     end
 end
 
-Counter #(8, 255) counter_y (// 每个frame_clk计数器减1
+Counter #(
+    .WIDTH      (8),
+    .RESET_VALUE(0)
+) counter_y (// 每个frame_clk计数器减1
   .clk       (frame_clk),
   .rstn      (rstn),
   .load_value(n - 1),
@@ -43,10 +52,10 @@ Counter #(8, 255) counter_y (// 每个frame_clk计数器减1
 );
 
 initial begin //初始化
-    loc_x <= (100 + randnum % 70);
-    loc_y <= 12 * num;
+    loc_x = 100;
+    loc_y = 12;
     // finish <= 0;
-    mark <= (1 + randnum % 2);
+    mark = 1;
 end
 
 endmodule

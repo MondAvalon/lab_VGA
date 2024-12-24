@@ -1,109 +1,60 @@
-module Bullet_tb ();
+`timescale 1ns / 1ps
 
-  // 参数定义
-  localparam ADDR_WIDTH = 15;
-  localparam V_SPEED = 2;
-  localparam H_LENGTH = 200;
-  localparam V_LENGTH = 150;
-  localparam MAX_BULLET = 5;
-  localparam COLLISION_THRESHOLD = 20;
+module tb_single_stair();
 
-  // 时钟和复位信号
-  reg clk;
-  reg frame_clk;
-  reg rstn;
+// 参数定义
+localparam H_LENGTH = 200;
+localparam V_LENGTH = 150;
 
-  // 输入信号
-  reg [$clog2(H_LENGTH)-1:0] player_x;
-  reg [$clog2(H_LENGTH)-1:0] player_y;
-  reg [$clog2(H_LENGTH)-1:0] enemy_x;
-  reg [$clog2(H_LENGTH)-1:0] enemy_y;
-  reg shoot;
-  reg [7:0] n_count;
-  reg [$clog2(MAX_BULLET)-1:0] lookup_i;
+// 信号定义
+reg clk;
+// reg frame_clk;
+reg enable_scroll;
+reg [7:0] n;
+reg rstn;
+wire [$clog2(H_LENGTH)-1:0] loc_x;
+wire [$clog2(V_LENGTH)-1:0] loc_y;
+wire [1:0] mark;
 
-  // 输出信号
-  wire [$clog2(H_LENGTH)-1:0] x_out;
-  wire [$clog2(H_LENGTH)-1:0] y_out;
-  wire display_out;
-  wire [$clog2(MAX_BULLET)-1:0] collision;
+// 实例化被测模块
+SingleStair #(
+    .H_LENGTH(H_LENGTH),
+    .V_LENGTH(V_LENGTH),
+    .NUM(0)
+) dut (
+    .clk(clk),
+    .frame_clk(clk),
+    .rstn(rstn),
+    .enable_scroll(enable_scroll),
+    .n(n),
+    .loc_x(loc_x),
+    .loc_y(loc_y),
+    .mark(mark)
+);
 
-  // 实例化被测模块
-  Bullet #(
-      .ADDR_WIDTH(ADDR_WIDTH),
-      .V_SPEED(V_SPEED),
-      .H_LENGTH(H_LENGTH),
-      .V_LENGTH(V_LENGTH),
-      .MAX_BULLET(MAX_BULLET),
-      .COLLISION_THRESHOLD(COLLISION_THRESHOLD)
-  ) u_bullet (
-      .clk(clk),
-      .frame_clk(frame_clk),
-      .rstn(rstn),
-      .player_x(player_x),
-      .player_y(player_y),
-      .enemy_x(enemy_x),
-      .enemy_y(enemy_y),
-      .shoot(shoot),
-      .n_count(n_count),
-      .lookup_i(lookup_i),
-      .x_out(x_out),
-      .y_out(y_out),
-      .display_out(display_out),
-      .collision(collision)
-  );
-
-  // 时钟生成
-  initial begin
+// 时钟生成
+initial begin
     clk = 0;
-    forever #5 clk = ~clk;
-  end
+    forever #5 clk = ~clk;  // 100MHz时钟
+end
 
-  initial begin
-    frame_clk = 0;
-    forever #20 frame_clk = ~frame_clk;
-  end
+// initial begin
+//     frame_clk = 0;
+//     forever #6944 frame_clk = ~frame_clk;  // ~72Hz帧时钟
+// end
 
-  // 测试激励
-  initial begin
+// 测试激励
+initial begin
     // 初始化
-    rstn = 0;
-    player_x = 100;
-    player_y = 120;
-    enemy_x = 100;
-    enemy_y = 20;
-    shoot = 0;
-    n_count = 0;
-    lookup_i = 0;
-
-    // 等待5个时钟周期后释放复位
-    #100;
+    enable_scroll = 1;
+    n = 8'd2;
     rstn = 1;
+end
 
-    // 测试发射子弹
-    #40;
-    shoot = 1;
-
-  end
-  // 在现有的 initial 块之后添加以下代码
-  initial begin
-    // 初始化 lookup_i
-    lookup_i = 0;
-
-    // 等待复位完成
-    #100;
-
-    // 循环切换 lookup_i
-    forever begin
-      #40;  // 每40个时间单位切换一次
-      lookup_i = (lookup_i + 1) % MAX_BULLET;
-    end
-  end
-
-  // 监视关键信号
-  initial begin
-    $monitor("Time=%0t lookup_i=%0d x_out=%0d y_out=%0d display_out=%0b collision=%0b", $time,
-             lookup_i, x_out, y_out, display_out, collision);
-  end
+// 监视输出
+//initial begin
+//    $monitor("Time=%0t enable_scroll=%b num=%d n=%d loc_x=%d loc_y=%d mark=%d",
+//             $time, enable_scroll, num, n, loc_x, loc_y, mark);
+//end
 
 endmodule

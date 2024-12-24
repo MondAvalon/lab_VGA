@@ -24,9 +24,9 @@ module FrameGenerator #(
     input  [$clog2(H_LENGTH)-1:0] bullet_x      [MAX_BULLET],
     input  [$clog2(V_LENGTH)-1:0] bullet_y      [MAX_BULLET],
     input                         bullet_display[MAX_BULLET],
-    input  [$clog2(H_LENGTH)-1:0] stair_x       [       16],
-    input  [$clog2(V_LENGTH)-1:0] stair_y       [       16],
-    input  [                 1:0] stair_display [       16],
+    input  [$clog2(H_LENGTH)-1:0] stair_x       [        16],
+    input  [$clog2(V_LENGTH)-1:0] stair_y       [        16],
+    input  [                 1:0] stair_display [        16],
 
     // output VGA signal
     input [ADDR_WIDTH-1:0] raddr,
@@ -59,6 +59,8 @@ module FrameGenerator #(
 
   reg [$clog2(H_LENGTH)-1:0] render_x;
   reg [$clog2(V_LENGTH)-1:0] render_y;
+  reg [$clog2(H_LENGTH)-1:0] render_x_prev;
+  reg [$clog2(V_LENGTH)-1:0] render_y_prev;
 
   wire [$clog2 (H_LENGTH)-1:0] player_x_left, player_x_right;
   wire [$clog2 (H_LENGTH)-1:0] flan_x_left, flan_x_right;
@@ -117,8 +119,8 @@ module FrameGenerator #(
 
   reg [1:0] player_anime_state;
   render_state_t render_state, next_render_state;
-  reg [6:0] object_y,object_y_buf;  // 高128
-  reg [7:0] object_x,object_x_buf;  // 宽256
+  reg [6:0] object_y;  // 高128
+  reg [7:0] object_x;  // 宽256
   wire [ADDR_WIDTH-1:0] object_addr;
   wire [11:0] object_rgb;
   wire object_alpha;
@@ -214,13 +216,14 @@ module FrameGenerator #(
   end
 
   always @(posedge clk) begin
-    if (!rstn) begin
-      object_x_buf <= 0;
-      object_y_buf <= 0;
+    if (~rstn) begin
+      render_x_prev <= 0;
+      render_y_prev <= 0;
     end else begin
-      object_x_buf <= object_x;
-      object_y_buf <= object_y;
+      render_x_prev <= render_x;
+      render_y_prev <= render_y;
     end
+
   end
 
   // reg [$clog2(MAX_BULLET)-1:0] next_bullet_index;
@@ -573,14 +576,14 @@ module FrameGenerator #(
   // 256x128
   Rom_Item objects (
       .clka(clk),  // input wire clka
-      .addra({object_y_buf,object_x_buf}),  // input wire [14 : 0] addra
+      .addra({object_y, object_x}),  // input wire [14 : 0] addra
       .douta(object_rgb)  // output wire [11 : 0] douta
   );
 
   // 256x128
   Rom_Item_alpha objects_alpha (
       .clka(clk),  // input wire clka
-      .addra({object_y_buf, object_x_buf}),  // input wire [14 : 0] addra
+      .addra({object_y, object_x}),  // input wire [14 : 0] addra
       .douta(object_alpha)  // output wire [0 : 0] douta
   );
 
