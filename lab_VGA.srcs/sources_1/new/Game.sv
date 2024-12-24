@@ -15,20 +15,20 @@ module Game #(
     input shoot,
     input space,
 
-    output reg [                   1:0] game_state,                   //游戏状态
+    output reg [                 1:0] game_state,                  //游戏状态
     // output in-game object x, y, priority
-//    input      [$clog2(MAX_BULLET)-1:0] bullet_lookup_i,
-    output     [                  15:0] score,
-    output     [                  15:0] high_score,
-    output reg                          enable_scroll,
-    output reg [                   7:0] n,
-    output     [  $clog2(H_LENGTH)-1:0] player_x,
-    output     [  $clog2(V_LENGTH)-1:0] player_y,
-    output     [  $clog2(H_LENGTH)-1:0] enemy_x,
-    output     [  $clog2(V_LENGTH)-1:0] enemy_y,
-    output     [  $clog2(H_LENGTH)-1:0] bullet_x       [MAX_BULLET],
-    output     [  $clog2(V_LENGTH)-1:0] bullet_y       [MAX_BULLET],
-    output                              bullet_display [MAX_BULLET]
+    //    input      [$clog2(MAX_BULLET)-1:0] bullet_lookup_i,
+    output     [                15:0] score,
+    output     [                15:0] high_score,
+    output reg                        enable_scroll,
+    output reg [                 7:0] n,
+    output     [$clog2(H_LENGTH)-1:0] player_x,
+    output     [$clog2(V_LENGTH)-1:0] player_y,
+    output     [$clog2(H_LENGTH)-1:0] enemy_x,
+    output     [$clog2(V_LENGTH)-1:0] enemy_y,
+    output     [$clog2(H_LENGTH)-1:0] bullet_x      [MAX_BULLET],
+    output     [$clog2(V_LENGTH)-1:0] bullet_y      [MAX_BULLET],
+    output                            bullet_display[MAX_BULLET]
 );
 
   // wire [$clog2(H_LENGTH)-1:0] next_player_x;
@@ -114,10 +114,12 @@ module Game #(
       .clk(clk),
       .frame_clk(frame_clk),
       .rstn(rstn),
-      .key_state(0),
+      //      .key_state(0),
+      .left(left),
+      .right(right),
       .enable_scroll(enable_scroll),
       .collision(0),
-      .n_count(n_count),
+      .n_count(counter_player.count),
 
       .loc_x(player_x),
       .loc_y(player_y)
@@ -136,7 +138,7 @@ module Game #(
       .enemy_x(enemy_x),
       .enemy_y(enemy_y),
       .n_count(n_count),
-//      .lookup_i(bullet_lookup_i),
+      //      .lookup_i(bullet_lookup_i),
 
       .collision(),
       .x(bullet_x),
@@ -152,9 +154,17 @@ module Game #(
       .count     (n_count)
   );
 
+  Counter #(8, 255) counter_player (  // 每个frame_clk计数器减1
+      .clk       (frame_clk),
+      .rstn      (rstn),
+      .load_value(n),
+      .enable    (1),
+      .count     ()
+  );
+
   initial begin
     enable_scroll = 1;
-    n = 5;
+    n = 2;
   end
 
 endmodule

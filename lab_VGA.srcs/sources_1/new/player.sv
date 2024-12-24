@@ -12,7 +12,9 @@ module Player #(
     input clk,
     input frame_clk,
     input rstn,
-    input [127:0] key_state,
+    // input [127:0] key_state,
+    input left,
+    input right,
     input enable_scroll,    //借用一下，实现暂停功能
     input [2:0] collision ,       //碰撞信号
     input [7:0] n_count,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
@@ -42,7 +44,7 @@ always @(posedge frame_clk) begin
         player_anime_state <= 0;
     end 
     else begin
-      if (n_count == 0) begin  // 计数器为零，移动
+      if (!n_count) begin  // 计数器为零，移动
         loc_y <= loc_y + speed_y;
       
       
@@ -68,11 +70,11 @@ end
 //更新当前x方向速度，根据键盘输入key_state确定左右
 always @(posedge frame_clk) begin
     speed_x <= 0;
-    if (key_state[1]) begin//键盘输入（具体输入信号未完成）
+    if (right) begin//键盘输入（具体输入信号未完成）
         speed_x <= SPEED_X;
         arrow <= 1;
     end
-    else if (key_state[0]) begin
+    else if (left) begin
         speed_x <= SPEED_X;
         arrow <= 0;
     end

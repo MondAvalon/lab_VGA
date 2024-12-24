@@ -82,10 +82,6 @@ module FrameGenerator #(
   assign boss_x_right = boss_x + 47;
   assign boss_y_up = boss_y - 17;
   assign boss_y_down = boss_y + 18;
-  assign bullet_x_left = bullet_x[bullet_index] - 4;
-  assign bullet_x_right = bullet_x[bullet_index] + 4;
-  assign bullet_y_up = bullet_y[bullet_index] - 11;
-  assign bullet_y_down = bullet_y[bullet_index] + 12;
   assign stair_x_left = stair_x - 14;
   assign stair_x_right = stair_x + 15;
   assign stair_y_up = stair_y - 1;
@@ -95,8 +91,12 @@ module FrameGenerator #(
   assign flan_y_up = player_y - 17;
   assign flan_y_down = player_y + 18;
 
+  assign bullet_x_left = bullet_x[bullet_index] - 4;
+  assign bullet_x_right = bullet_x[bullet_index] + 4;
+  assign bullet_y_up = bullet_y[bullet_index] - 7;
+  assign bullet_y_down = bullet_y[bullet_index] + 16;
   wire [$clog2(H_LENGTH)-1:0] bullet_x_left_next = bullet_x[bullet_index+1] - 4;
-  wire [$clog2(V_LENGTH)-1:0] bullet_y_up_next = bullet_y[bullet_index+1] - 11;
+  wire [$clog2(V_LENGTH)-1:0] bullet_y_up_next = bullet_y[bullet_index+1] - 7;
 
   wire generation_begin;
 
@@ -373,8 +373,8 @@ module FrameGenerator #(
                 bullet_index <= 0;
               end else begin  // Move to next bullet
                 bullet_index <= bullet_index + 1;
-                render_x <= bullet_x_left;
-                render_y <= bullet_y_up;
+                render_x <= bullet_x_left_next;
+                render_y <= bullet_y_up_next;
               end
             end else begin  //下一行
               render_x <= bullet_x_left;

@@ -11,7 +11,9 @@ module background #(
     input [7:0] n,  // 每n个frame_clk更新一次offset，速度分母
     input signed [$clog2(V_LENGTH)-1:0] v,  //速度分子
 
-    output reg [11:0] rgb
+    output [11:0] rgb_0,
+    output [11:0] rgb_1,
+    output alpha_1
 );
 
   reg [ADDR_WIDTH-1:0] scroll_addr;
@@ -20,9 +22,9 @@ module background #(
   reg [ADDR_WIDTH-1:0] offset_1;
   wire [7:0] count;  // 计数器
   // wire [7:0] count_1;  // 前景计数器
-  wire alpha_1;
-  wire [11:0] rgb_0;
-  wire [11:0] rgb_1;
+  // wire alpha_1;
+  // wire [11:0] rgb_0;
+  // wire [11:0] rgb_1;
   wire signed [$clog2(V_LENGTH)-1:0] v_1 = v + 1;
 
   // 使用参数预计算常量值
@@ -56,13 +58,13 @@ module background #(
   end
 
   // assign rgb = alpha_1 ? rgb_1 : rgb_0;
-  always @(posedge clk) begin
-    if (!rstn) begin
-      rgb <= 0;
-    end else begin
-      rgb <= alpha_1 ? rgb_1 : rgb_0;
-    end
-  end
+  // always @(posedge clk) begin
+  //   if (!rstn) begin
+  //     rgb <= 0;
+  //   end else begin
+  //     rgb <= alpha_1 ? rgb_1 : rgb_0;
+  //   end
+  // end
 
   Rom_Background background (
       .clka (clk),

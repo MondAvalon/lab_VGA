@@ -1,6 +1,6 @@
 module Bullet #(
     parameter ADDR_WIDTH = 15,
-    parameter signed V_SPEED = 3,  //子弹速度
+    parameter signed V_SPEED = 2,  //子弹速度
     parameter H_LENGTH = 200,  //画布宽度
     parameter V_LENGTH = 150,  //画布高度
     parameter MAX_BULLET = 5,  //最大子弹数
@@ -21,10 +21,10 @@ module Bullet #(
     // output [$clog2(H_LENGTH)-1:0] x_out,  //子弹中心坐标
     // output [$clog2(H_LENGTH)-1:0] y_out,
     // output display_out,  //子弹是否存在
-    output reg [  $clog2(H_LENGTH)-1:0] x        [MAX_BULLET],
-    output reg [  $clog2(V_LENGTH)-1:0] y        [MAX_BULLET],
-    output reg                          display  [MAX_BULLET],
-    output reg [$clog2(MAX_BULLET)-1:0] collision               //是否碰撞
+    output reg [$clog2(H_LENGTH)-1:0] x        [MAX_BULLET],
+    output reg [$clog2(V_LENGTH)-1:0] y        [MAX_BULLET],
+    output reg                        display  [MAX_BULLET],
+    output reg                        collision               //是否碰撞
 );
 
 
