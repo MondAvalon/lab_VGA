@@ -2,7 +2,7 @@
 module Player #(
     parameter ADDR_WIDTH = 15,
     parameter SPEED_X = 2,
-    parameter signed BUNCE_V = -3,  //回弹初速度
+    parameter signed BUNCE_V = -5,  //回弹初速度
     parameter G_CONST = 1,  //重力加速度
     parameter addr_x = 100,  //输入起始中心x坐标
     parameter addr_y = 75,  //输入起始中心y坐标
@@ -36,9 +36,9 @@ always @(posedge frame_clk) begin
         loc_x <= addr_x;
         loc_y <= addr_y;
         Speed_y <= 0;
-        arrow <= 0;
-        speed_x <= 0;
-        speed_y <= 0;
+//        arrow <= 0;
+//        speed_x <= 0;
+//        speed_y <= 0;
         player_anime_state <= 0;
     end 
     else begin
@@ -74,6 +74,7 @@ end
 always @(posedge frame_clk) begin
     if ((collision[1] == 1'b1)|| (loc_y>V_LENGTH-16 && ~speed_y[$clog2(V_LENGTH)-1])) begin
         speed_y <= -speed_y;
+
     end else if(n_count == 0) begin
         if (speed_y == 10) begin
             speed_y <= speed_y;
