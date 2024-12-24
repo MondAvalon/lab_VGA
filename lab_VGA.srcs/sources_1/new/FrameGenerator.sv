@@ -11,23 +11,21 @@ module FrameGenerator #(
     input rstn,
 
     //input in-game x, y
-    input [1:0] game_state,
-    input scroll_enabled,
-    input [7:0] n,
-    output [ADDR_WIDTH-1:0] render_addr,
-    output reg [3:0] stair_index,
-    output reg [$clog2(MAX_BULLET)-1:0] bullet_index,
-    input [15:0] score,
-    input [15:0] high_score,
-    input [$clog2(H_LENGTH)-1:0] player_x,
-    input [$clog2(V_LENGTH)-1:0] player_y,
-    input [$clog2(H_LENGTH)-1:0] boss_x,
-    input [$clog2(V_LENGTH)-1:0] boss_y,
-    input [$clog2(H_LENGTH)-1:0] bullet_x,
-    input [$clog2(V_LENGTH)-1:0] bullet_y,
-    input [$clog2(H_LENGTH)-1:0] bullet_display,
-    input [$clog2(H_LENGTH)-1:0] stair_x,
-    input [$clog2(V_LENGTH)-1:0] stair_y,
+    input  [                 1:0] game_state,
+    input                         scroll_enabled,
+    input  [                 7:0] n,
+    output [      ADDR_WIDTH-1:0] render_addr,
+    input  [                15:0] score,
+    input  [                15:0] high_score,
+    input  [$clog2(H_LENGTH)-1:0] player_x,
+    input  [$clog2(V_LENGTH)-1:0] player_y,
+    input  [$clog2(H_LENGTH)-1:0] boss_x,
+    input  [$clog2(V_LENGTH)-1:0] boss_y,
+    input  [$clog2(H_LENGTH)-1:0] bullet_x      [MAX_BULLET],
+    input  [$clog2(V_LENGTH)-1:0] bullet_y      [MAX_BULLET],
+    input                         bullet_display[MAX_BULLET],
+    input  [$clog2(H_LENGTH)-1:0] stair_x,
+    input  [$clog2(V_LENGTH)-1:0] stair_y,
 
     // output VGA signal
     input [ADDR_WIDTH-1:0] raddr,
@@ -64,13 +62,17 @@ module FrameGenerator #(
   wire [$clog2 (H_LENGTH)-1:0] flan_x_left, flan_x_right;
   wire [$clog2 (H_LENGTH)-1:0] boss_x_left, boss_x_right;
   wire [$clog2 (H_LENGTH)-1:0] bullet_x_left, bullet_x_right;
+  // wire [$clog2 (H_LENGTH)-1:0] next_bullet_x_left, next_bullet_x_right;
   wire [$clog2 (H_LENGTH)-1:0] stair_x_left, stair_x_right;
 
   wire [$clog2 (V_LENGTH)-1:0] player_y_up, player_y_down;
   wire [$clog2 (V_LENGTH)-1:0] flan_y_up, flan_y_down;
   wire [$clog2 (V_LENGTH)-1:0] boss_y_up, boss_y_down;
   wire [$clog2 (V_LENGTH)-1:0] bullet_y_up, bullet_y_down;
+  // wire [$clog2 (V_LENGTH)-1:0] next_bullet_y_up, next_bullet_y_down;
   wire [$clog2 (V_LENGTH)-1:0] stair_y_up, stair_y_down;
+
+  reg [$clog2(MAX_BULLET)-1:0] bullet_index;
 
   assign player_x_left = player_x - 14;
   assign player_x_right = player_x + 15;
@@ -80,19 +82,21 @@ module FrameGenerator #(
   assign boss_x_right = boss_x + 47;
   assign boss_y_up = boss_y - 17;
   assign boss_y_down = boss_y + 18;
-  assign bullet_x_left = bullet_x - 4;
-  assign bullet_x_right = bullet_x + 4;
-  assign bullet_y_up = bullet_y - 11;
-  assign bullet_y_down = bullet_y + 12;
+  assign bullet_x_left = bullet_x[bullet_index] - 4;
+  assign bullet_x_right = bullet_x[bullet_index] + 4;
+  assign bullet_y_up = bullet_y[bullet_index] - 11;
+  assign bullet_y_down = bullet_y[bullet_index] + 12;
   assign stair_x_left = stair_x - 14;
   assign stair_x_right = stair_x + 15;
   assign stair_y_up = stair_y - 1;
   assign stair_y_down = stair_y + 2;
-
   assign flan_x_left = player_x + 20;
   assign flan_x_right = player_x + 49;
   assign flan_y_up = player_y - 17;
   assign flan_y_down = player_y + 18;
+
+  wire [$clog2(H_LENGTH)-1:0] bullet_x_left_next = bullet_x[bullet_index+1] - 4;
+  wire [$clog2(V_LENGTH)-1:0] bullet_y_up_next = bullet_y[bullet_index+1] - 11;
 
   wire generation_begin;
 
@@ -337,7 +341,7 @@ module FrameGenerator #(
         end
         RENDER_HIGH_SCORE: begin
           vram_rgb <= object_rgb;
-          vram_we <= object_alpha;
+          vram_we  <= object_alpha;
           // vram_rgb <= object_rgb;
           if (!(render_x ^ HIGH_SCORE_POS_X_MAX[score_digit])) begin
             if (!(render_y ^ HIGH_SCORE_POS_Y_MAX)) begin  // 完成一个数字渲染
@@ -359,10 +363,8 @@ module FrameGenerator #(
           end
         end
         RENDER_BULLET: begin
-          vram_we <= object_alpha&& bullet_display;
+          vram_we  <= object_alpha && bullet_display[bullet_index];
           vram_rgb <= object_rgb;
-          // if (render_addr >= 0 && render_addr <= ADDR_MAX)
-          //   vram_rgb <= bullet_display ? object_rgb : background_rgb;
           if (!(render_x ^ bullet_x_right)) begin
             if (!(render_y ^ bullet_y_down)) begin
               if (!(bullet_index ^ (MAX_BULLET - 1))) begin  // All bullets rendered, move to player
@@ -381,11 +383,44 @@ module FrameGenerator #(
           end else begin
             render_x <= render_x + 1;
           end
+
+          // // 如果display为0，跳到下一个子弹渲染
+          // if (!(bullet_display[bullet_index])) begin
+          //   if (bullet_index<MAX_BULLET) begin
+          //     bullet_index <= bullet_index + 1;
+          //     render_x <= bullet_x_left_next;
+          //     render_y <= bullet_y_up_next;
+          //   end else begin
+          //     // next_render_state <= RENDER_PLAYER;
+          //     render_x <= player_x_left;
+          //     render_y <= player_y_up;
+          //     bullet_index <= 0;
+          //   end
+          // end else begin  // 子弹渲染
+          //   if(!(render_x ^ bullet_x_right)) begin
+          //     if(!(render_y ^ bullet_y_down)) begin
+          //       if(bullet_index<MAX_BULLET) begin
+          //         bullet_index <= bullet_index + 1;
+          //         render_x <= bullet_x_left_next;
+          //         render_y <= bullet_y_up_next;
+          //       end else begin
+          //         // next_render_state <= RENDER_PLAYER;
+          //         render_x <= player_x_left;
+          //         render_y <= player_y_up;
+          //         bullet_index <= 0;
+          //       end
+          //     end else begin
+          //       render_x <= bullet_x_left;
+          //       render_y <= render_y + 1;
+          //     end
+          //   end else begin
+          //     render_x <= render_x + 1;
+          //   end
+          // end
         end
         RENDER_PLAYER: begin
           vram_we  <= object_alpha;
           vram_rgb <= object_rgb;
-          // vram_rgb <= object_rgb;
           if (!(render_x ^ player_x_right)) begin
             if (!(render_y ^ player_y_down)) begin
               // next_render_state <= RENDER_BOSS;

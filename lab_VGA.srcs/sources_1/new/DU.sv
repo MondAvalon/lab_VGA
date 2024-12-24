@@ -10,7 +10,8 @@ module DisplayUnit #(
     output                  hs,
     output                  vs,
     output [ADDR_WIDTH-1:0] raddr,
-    output [          11:0] rgb_out
+    output [          11:0] rgb_out,
+    output                  frame
 );
 
   // 内部连线
@@ -24,7 +25,8 @@ module DisplayUnit #(
       .h_enable(h_enable),
       .v_enable(v_enable),
       .h_sync(hs),
-      .v_sync(vs)
+      .v_sync(vs),
+      .frame(frame)
   );
 
   // 实例化DisplayDataProcessor数据处理模块

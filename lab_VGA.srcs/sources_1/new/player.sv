@@ -22,8 +22,8 @@ module Player #(
     output reg [1:0] player_anime_state, //玩家动画状态
     output reg [$clog2(V_LENGTH)-1:0] Speed_y
 );
-parameter X_WHITH = 30;  //物体宽
-parameter Y_WHITH = 36;  //物体长
+localparam X_WHITH = 30;  //物体宽
+localparam Y_WHITH = 36;  //物体长
 
 reg  arrow; //判断左右移动方向，取1为左,取0为右
 reg  [3:0] speed_x;

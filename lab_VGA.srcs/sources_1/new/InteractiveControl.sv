@@ -39,12 +39,14 @@ module Controllor #(
   wire [$clog2(V_LENGTH)-1:0] player_y;
   wire [$clog2(H_LENGTH)-1:0] boss_x;
   wire [$clog2(V_LENGTH)-1:0] boss_y;
-  wire [$clog2(H_LENGTH)-1:0] bullet_x;
-  wire [$clog2(V_LENGTH)-1:0] bullet_y;
-  wire [$clog2(MAX_BULLET)-1:0] bullet_index;
-  wire bullet_display;
+  // wire [$clog2(H_LENGTH)-1:0] bullet_x;
+  // wire [$clog2(V_LENGTH)-1:0] bullet_y;
+  // wire [$clog2(MAX_BULLET)-1:0] bullet_index;
+  // wire bullet_display;
+  wire frame;
+  wire frame_clk;
 
-  reg clk_72hz = 0;
+  reg clk_72hz = 1;
   reg [15:0] counter_72hz = 0;
   localparam DIVIDER_72HZ = 16'd34722;  // 5MHz / 72Hz / 2
 
@@ -91,7 +93,7 @@ module Controllor #(
   // 游戏逻辑
   Game game_inst (
       .clk(pclk),
-      .frame_clk(VGA_VS),
+      .frame_clk(frame_clk),
       .rstn(rstn),
       .render_addr(render_addr),
       .left(left),
@@ -101,7 +103,7 @@ module Controllor #(
 
       // output in-game object x, y, priority, color
       .game_state(game_state),
-      .bullet_lookup_i(bullet_index),
+      // .bullet_lookup_i(bullet_index),
       .score(score),
       .high_score(high_score),
       .enable_scroll(enable_scroll),
@@ -110,9 +112,9 @@ module Controllor #(
       .player_y(player_y),
       .enemy_x(boss_x),
       .enemy_y(boss_y),
-      .bullet_x(bullet_x),
-      .bullet_y(bullet_y),
-      .bullet_display(bullet_display)
+      .bullet_x(),
+      .bullet_y(),
+      .bullet_display()
   );
 
   // 帧生成
@@ -123,12 +125,12 @@ module Controllor #(
   ) frame_gen_inst (
       .ram_clk(clk),
       .clk(pclk),
-      .frame_clk(VGA_VS),
+      .frame_clk(frame_clk),
       .rstn(rstn),
 
       //input in-game .x, .y, .priority, .color
       .game_state(game_state),
-      .bullet_index(bullet_index),
+      // .bullet_index(bullet_index),
       .scroll_enabled(enable_scroll),
       .n(n),
       .render_addr(render_addr),
@@ -138,9 +140,9 @@ module Controllor #(
       .player_y(player_y),
       .boss_x(boss_x),
       .boss_y(boss_y),
-      .bullet_x(bullet_x),
-      .bullet_y(bullet_y),
-      .bullet_display(bullet_display),
+      .bullet_x(game_inst.bullet_x),
+      .bullet_y(game_inst.bullet_y),
+      .bullet_display(game_inst.bullet_display),
       .raddr(raddr),
       .rdata(rdata)
   );
@@ -158,7 +160,16 @@ module Controllor #(
       .raddr(raddr),
       .hs(VGA_HS),
       .vs(VGA_VS),
-      .rgb_out({VGA_R, VGA_G, VGA_B})
+      .rgb_out({VGA_R, VGA_G, VGA_B}),
+      .frame(frame)
+  );
+
+  PulseSync #(
+      .WIDTH(1)
+  ) ps (
+      .sync_in  (frame),
+      .clk      (clk_5mhz),
+      .pulse_out(frame_clk)
   );
 
 

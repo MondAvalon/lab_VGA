@@ -26,7 +26,8 @@ module DisplaySyncTiming (
     output reg [0 : 0] h_enable,  //水平显示有效
     output reg [0 : 0] v_enable,  //垂直显示有效
     output reg [0 : 0] h_sync,    //行同步
-    output reg [0 : 0] v_sync     //场同步
+    output reg [0 : 0] v_sync,     //场同步
+    output frame
 );
 
   localparam H_SYNC_WIDTH = 119;  //水平同步脉冲宽度
@@ -48,6 +49,7 @@ module DisplaySyncTiming (
 
   reg  [ 1 : 0] h_state;
   reg  [ 1 : 0] v_state;
+  assign frame = v_state == STATE_FRONT_PORCH;
 
   reg  [15 : 0] h_load_value;
   reg  [15 : 0] v_load_value;
