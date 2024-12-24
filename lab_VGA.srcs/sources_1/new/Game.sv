@@ -28,7 +28,10 @@ module Game #(
     output     [$clog2(V_LENGTH)-1:0] enemy_y,
     output     [$clog2(H_LENGTH)-1:0] bullet_x      [MAX_BULLET],
     output     [$clog2(V_LENGTH)-1:0] bullet_y      [MAX_BULLET],
-    output                            bullet_display[MAX_BULLET]
+    output                            bullet_display[MAX_BULLET],
+    output     [$clog2(H_LENGTH)-1:0] stair_x       [        16],
+    output     [$clog2(V_LENGTH)-1:0] stair_y       [        16],
+    output     [                 1:0] stair_display [        16]
 );
 
   // wire [$clog2(H_LENGTH)-1:0] next_player_x;
@@ -42,9 +45,11 @@ module Game #(
   // test
   assign enemy_x = 100;
   assign enemy_y = 20;
-  // assign bullet_x = 10;
-  // assign bullet_y = 30;
-  // assign bullet_display = 0;
+  assign stair_display = {1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2};
+  assign stair_x = {15, 20, 25, 30, 35, 35, 35, 35, 55, 55, 55, 55, 175, 175, 175, 175};
+  assign stair_y = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 10, 20};
+
+
 
   // 状态机测试代码，需要具体修改
   // Game state definitions
@@ -146,6 +151,17 @@ module Game #(
       .display(bullet_display)
   );
 
+  Stairs stairs_inst (
+      .clk(clk),
+      .frame_clk(frame_clk),
+      .rstn(rstn),
+      .enable_scroll(enable_scroll),
+      .n(n)
+      // .state_x(stair_x),
+      // .state_y(stair_y),
+      // .state_mark(stair_display)
+  );
+
   Counter #(8, 255) counter (  // 每个frame_clk计数器减1
       .clk       (frame_clk),
       .rstn      (rstn),
@@ -164,7 +180,7 @@ module Game #(
 
   initial begin
     enable_scroll = 1;
-    n = 2;
+    n = 3;
   end
 
 endmodule

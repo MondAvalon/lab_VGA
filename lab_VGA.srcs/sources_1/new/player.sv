@@ -46,7 +46,8 @@ always @(posedge frame_clk) begin
     else begin
       if (!n_count) begin  // 计数器为零，移动
         loc_y <= loc_y + speed_y;
-      
+
+        player_anime_state <= (player_anime_state + 1)%3;
       
         if (arrow) begin
             if (loc_x>(H_LENGTH-20)) begin

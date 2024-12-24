@@ -114,7 +114,10 @@ module Controllor #(
       .enemy_y(boss_y),
       .bullet_x(),
       .bullet_y(),
-      .bullet_display()
+      .bullet_display(),
+      .stair_x(),
+      .stair_y(),
+      .stair_display()
   );
 
   // 帧生成
@@ -143,25 +146,56 @@ module Controllor #(
       .bullet_x(game_inst.bullet_x),
       .bullet_y(game_inst.bullet_y),
       .bullet_display(game_inst.bullet_display),
+      .stair_x(game_inst.stair_x),
+      .stair_y(game_inst.stair_y),
+      .stair_display(game_inst.stair_display),
+
       .raddr(raddr),
       .rdata(rdata)
   );
 
   // 显示
-  DisplayUnit #(
+  // DisplayUnit #(
+  //     .ADDR_WIDTH(ADDR_WIDTH),
+  //     .H_LENGTH  (H_LENGTH),
+  //     .V_LENGTH  (V_LENGTH)
+  // ) display_unit_inst (
+  //     .rstn (rstn),
+  //     .pclk (pclk),
+  //     .rdata(rdata),
+
+  //     .raddr(raddr),
+  //     .hs(VGA_HS),
+  //     .vs(VGA_VS),
+  //     .rgb_out(),
+  //     .frame(frame)
+  // );
+  wire h_enable;
+  wire v_enable;
+  // 实例化DisplaySyncTiming同步时序模块
+  DisplaySyncTiming dst (
+      .rstn(rstn),
+      .pclk(pclk),
+      .h_enable(h_enable),
+      .v_enable(v_enable),
+      .h_sync(VGA_HS),
+      .v_sync(VGA_VS),
+      .frame(frame)
+  );
+
+  // 实例化DisplayDataProcessor数据处理模块
+  DisplayDataProcessor #(
       .ADDR_WIDTH(ADDR_WIDTH),
       .H_LENGTH  (H_LENGTH),
       .V_LENGTH  (V_LENGTH)
-  ) display_unit_inst (
-      .rstn (rstn),
-      .pclk (pclk),
-      .rdata(rdata),
-
-      .raddr(raddr),
-      .hs(VGA_HS),
-      .vs(VGA_VS),
+  ) ddp (
+      .h_enable(h_enable),
+      .v_enable(v_enable),
+      .rstn(rstn),
+      .pclk(pclk),
+      .read_data(rdata),
       .rgb_out({VGA_R, VGA_G, VGA_B}),
-      .frame(frame)
+      .read_addr(raddr)
   );
 
   PulseSync #(

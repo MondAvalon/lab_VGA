@@ -1,6 +1,6 @@
 module Bullet #(
     parameter ADDR_WIDTH = 15,
-    parameter signed V_SPEED = 2,  //子弹速度
+    parameter signed V_SPEED = 3,  //子弹速度
     parameter H_LENGTH = 200,  //画布宽度
     parameter V_LENGTH = 150,  //画布高度
     parameter MAX_BULLET = 5,  //最大子弹数
