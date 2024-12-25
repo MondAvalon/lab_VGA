@@ -1,4 +1,3 @@
-`timescale 1ns/1ps
 module TOP (
     input CLK100MHZ,   // 100_000_000 MHz
     input CPU_RESETN,

@@ -41,9 +41,6 @@ module Player #(
       loc_x <= addr_x;
       loc_y <= addr_y;
       Speed_y <= 0;
-      //        arrow <= 0;
-      //        speed_x <= 0;
-      //        speed_y <= 0;
       player_anime_state <= 0;
     end else begin
       if (!n_count) begin  // 计数器为零，移动
@@ -74,35 +71,44 @@ module Player #(
           2: player_anime_state <= 1;
           default: player_anime_state <= 0;
         endcase
-        prev_anime_state <= player_anime_state;
       end
+      prev_anime_state <= player_anime_state;
+    end
+  end
 
-
-      if (!ani_count) begin
-        ani_count <= 5'd31;
-      end else begin
-        ani_count <= ani_count - 1;
-      end
+  always @(posedge frame_clk) begin
+    if (!rstn) begin
+      ani_count <= 0;
+    end else begin
+      ani_count <= ani_count == 30 ? 0 : ani_count + 1;
     end
   end
 
   //更新当前x方向速度，根据键盘输入key_state确定左右
   always @(posedge frame_clk) begin
-    speed_x <= 0;
-    if (right) begin  //键盘输入（具体输入信号未完成）
-      speed_x <= SPEED_X;
-      arrow   <= 1;
-    end else if (left) begin
-      speed_x <= SPEED_X;
+    if (!rstn) begin
+      speed_x <= 0;
       arrow   <= 0;
+    end else begin
+      speed_x <= 0;
+      if (right) begin  //键盘输入
+        speed_x <= SPEED_X;
+        arrow   <= 1;
+      end else if (left) begin
+        speed_x <= SPEED_X;
+        arrow   <= 0;
+      end
     end
   end
 
   //更新当前y方向速度，根据collision确定碰撞
   always @(posedge frame_clk) begin
-    if ((collision[1] == 1'b1) || (loc_y > V_LENGTH - 16 && ~speed_y[$clog2(V_LENGTH)-1])) begin
+    if (!rstn) begin
+      speed_y <= 0;
+    end else if ((collision[1] == 1'b1) || (loc_y > V_LENGTH - 16 && ~speed_y[$clog2(
+            V_LENGTH
+        )-1])) begin
       speed_y <= -speed_y;
-
     end else if (n_count == 0) begin
       if (speed_y == 10) begin
         speed_y <= speed_y;
@@ -111,8 +117,6 @@ module Player #(
       end
     end
   end
-
-
 
   initial begin  //初始化
     loc_x <= addr_x;

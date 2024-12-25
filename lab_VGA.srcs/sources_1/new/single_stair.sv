@@ -16,22 +16,24 @@ module SingleStair#(
     output reg [1:0] mark //台阶分类
 ); 
 wire [7:0] count_y;  // 计数器
-reg signed [31:0] randnum=NUM*32'h12345678;  // 随机数种子
+reg signed [31:0] randnum;
+localparam X_INIT = NUM * 11;
+localparam Y_INIT = NUM * 9+5;
 
 always @(posedge frame_clk) begin
-    randnum <= {randnum[30:0], randnum[0] ^ randnum[1] ^ randnum[2] ^ randnum[3]};
+    randnum <= {randnum[30:0], randnum[31]^randnum[27]};
 end
 
 // 在每个frame_clk上升沿更新计数器和偏移量
 always @(posedge frame_clk) begin
     if(!rstn) begin
-        loc_x <= NUM * 11;
-        loc_y <= 10;
+        loc_x <= X_INIT;
+        loc_y <= Y_INIT;
         mark <= 0;
     end else begin
         if (loc_y > 145) begin
             loc_x <= (100 + randnum % 70);
-            loc_y <= 10;
+            loc_y <= 5;
             mark <= (1 + randnum % 2);
         end
         else begin
@@ -54,10 +56,10 @@ Counter #(
 );
 
 initial begin //初始化
-    loc_x = NUM * 11;
-    loc_y = 10;
-    // finish <= 0;
-    mark = 1;
+    loc_x = X_INIT;
+    loc_y = Y_INIT;
+    mark = 0;
+    randnum = NUM * 32'h01234567;
 end
 
 endmodule
