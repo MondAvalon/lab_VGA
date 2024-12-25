@@ -12,23 +12,24 @@ module FrameGenerator #(
     input rstn,
 
     //input in-game x, y
-    input  [                 1:0] game_state,
-    input                         scroll_enabled,
-    input  [                 7:0] n,
-    output [      ADDR_WIDTH-1:0] render_addr,
-    input  [                15:0] score,
-    input  [                15:0] high_score,
-    input  [$clog2(H_LENGTH)-1:0] player_x,
-    input  [$clog2(V_LENGTH)-1:0] player_y,
-    input  [                 1:0] player_anime_state,
-    input  [$clog2(H_LENGTH)-1:0] boss_x,
-    input  [$clog2(V_LENGTH)-1:0] boss_y,
-    input  [$clog2(H_LENGTH)-1:0] bullet_x          [MAX_BULLET],
-    input  [$clog2(V_LENGTH)-1:0] bullet_y          [MAX_BULLET],
-    input                         bullet_display    [MAX_BULLET],
-    input  [$clog2(H_LENGTH)-1:0] stair_x           [        16],
-    input  [$clog2(V_LENGTH)-1:0] stair_y           [        16],
-    input  [                 1:0] stair_display     [        16],
+    input         [                 1:0] game_state,
+    input                                scroll_enabled,
+    input         [                 7:0] n,
+    input  signed [$clog2(V_LENGTH)-1:0] v,
+    output        [      ADDR_WIDTH-1:0] render_addr,
+    input         [                15:0] score,
+    input         [                15:0] high_score,
+    input         [$clog2(H_LENGTH)-1:0] player_x,
+    input         [$clog2(V_LENGTH)-1:0] player_y,
+    input         [                 1:0] player_anime_state,
+    input         [$clog2(H_LENGTH)-1:0] boss_x,
+    input         [$clog2(V_LENGTH)-1:0] boss_y,
+    input         [$clog2(H_LENGTH)-1:0] bullet_x          [MAX_BULLET],
+    input         [$clog2(V_LENGTH)-1:0] bullet_y          [MAX_BULLET],
+    input                                bullet_display    [MAX_BULLET],
+    input         [$clog2(H_LENGTH)-1:0] stair_x           [        16],
+    input         [$clog2(V_LENGTH)-1:0] stair_y           [        16],
+    input         [                 1:0] stair_display     [        16],
 
     // output VGA signal
     input [ADDR_WIDTH-1:0] raddr,
@@ -143,13 +144,13 @@ module FrameGenerator #(
   // 显示坐标常量
 
   localparam ADDR_MAX = H_LENGTH * V_LENGTH - 1;
-  localparam [7:0] SCORE_POS_X[0:3] = {8'd0, 8'd10, 8'd20, 8'd30};
+  localparam [7:0] SCORE_POS_X[0:3] = {8'd1, 8'd11, 8'd21, 8'd31};
   localparam SCORE_POS_Y = 140;
-  localparam [7:0] HIGH_SCORE_POS_X[0:3] = {8'd0, 8'd10, 8'd20, 8'd30};
+  localparam [7:0] HIGH_SCORE_POS_X[0:3] = {8'd1, 8'd11, 8'd21, 8'd31};
   localparam HIGH_SCORE_POS_Y = 140;
-  localparam [7:0] SCORE_POS_X_MAX[0:3] = {8'd9, 8'd19, 8'd29, 8'd39};
+  localparam [7:0] SCORE_POS_X_MAX[0:3] = {8'd10, 8'd20, 8'd30, 8'd40};
   localparam SCORE_POS_Y_MAX = 149;
-  localparam [7:0] HIGH_SCORE_POS_X_MAX[0:3] = {8'd9, 8'd19, 8'd29, 8'd39};
+  localparam [7:0] HIGH_SCORE_POS_X_MAX[0:3] = {8'd10, 8'd20, 8'd30, 8'd40};
   localparam HIGH_SCORE_POS_Y_MAX = 149;
 
   // 游戏对象ROM坐标常量
@@ -489,9 +490,8 @@ module FrameGenerator #(
           end
         end
         RENDER_SCORE: begin
-          vram_we  <= object_alpha;
-          // vram_rgb <= object_alpha ? object_rgb : background_rgb;
           vram_rgb <= object_rgb;
+          vram_we  <= object_alpha;
           if (!(render_x ^ SCORE_POS_X_MAX[score_digit])) begin
             if (!(render_y ^ SCORE_POS_Y_MAX)) begin  // 完成一个数字渲染
               if (!(score_digit ^ 3)) begin  // 完成所有数字
@@ -515,7 +515,6 @@ module FrameGenerator #(
         RENDER_HIGH_SCORE: begin
           vram_rgb <= object_rgb;
           vram_we  <= object_alpha;
-          // vram_rgb <= object_rgb;
           if (!(render_x ^ HIGH_SCORE_POS_X_MAX[score_digit])) begin
             if (!(render_y ^ HIGH_SCORE_POS_Y_MAX)) begin  // 完成一个数字渲染
               if (!(score_digit ^ 3)) begin  // 完成所有数字
@@ -543,7 +542,7 @@ module FrameGenerator #(
 
 
   vram_bram vram_inst (
-      .clka (rom_clk),
+      .clka (clk),
       .wea  (vram_we),
       .addra(vram_addr),
       .dina (vram_rgb),
@@ -558,13 +557,13 @@ module FrameGenerator #(
       .H_LENGTH  (H_LENGTH),
       .V_LENGTH  (V_LENGTH)
   ) background_inst (
-      .clk(clk),
+      .clk(rom_clk),
       .frame_clk(frame_clk),
       .rstn(rstn),
       .scroll_enabled(scroll_enabled),
-      .addr(render_addr_next + 1),  //读取rom中的数据的地址
+      .addr(render_addr_next),  //读取rom中的数据的地址
       .n(n),  //每n个frame_clk
-      .v(1),
+      .v(v),  //每次滚动的像素数
       .rgb_0(background_rgb),
       .rgb_1(background_rgb_1),
       .alpha_1(background_alpha_1)

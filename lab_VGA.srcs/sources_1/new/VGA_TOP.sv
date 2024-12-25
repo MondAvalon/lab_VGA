@@ -12,7 +12,7 @@ module TOP (
     output [3 : 0] VGA_B,
     output AUD_PWM,
     output AUD_SD,
-    output reg [15:0] LED
+    output [15:0] LED
 );
 
   localparam H_LENGTH = 200;
@@ -59,34 +59,12 @@ module TOP (
       .btnu(BTNU),
       .btnd(BTND),
 
+      .LED(LED),
       .VGA_R(VGA_R),
       .VGA_G(VGA_G),
       .VGA_B(VGA_B),
       .VGA_HS(VGA_HS),
       .VGA_VS(VGA_VS)
   );
-
-  initial begin
-    LED = 16'b0000_0000_1111_1111;
-  end
-
-  always @(posedge VGA_VS) begin
-    LED[15]<=LED[14];
-    LED[14]<=LED[13];
-    LED[13]<=LED[12];
-    LED[12]<=LED[11];
-    LED[11]<=LED[10];
-    LED[10]<=LED[9];
-    LED[9]<=LED[8];
-    LED[8]<=LED[7];
-    LED[7]<=LED[6];
-    LED[6]<=LED[5];
-    LED[5]<=LED[4];
-    LED[4]<=LED[3];
-    LED[3]<=LED[2];
-    LED[2]<=LED[1];
-    LED[1]<=LED[0];
-    LED[0]<=LED[15];
-  end
 
 endmodule

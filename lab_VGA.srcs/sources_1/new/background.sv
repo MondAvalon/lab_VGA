@@ -25,7 +25,7 @@ module background #(
   // wire alpha_1;
   // wire [11:0] rgb_0;
   // wire [11:0] rgb_1;
-  wire signed [$clog2(V_LENGTH)-1:0] v_1 = v + 1;
+  wire signed [$clog2(V_LENGTH)-1:0] v_1 = v*2;
 
   // 使用参数预计算常量值
   localparam MAX_OFFSET = H_LENGTH * V_LENGTH;

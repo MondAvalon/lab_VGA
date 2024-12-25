@@ -10,6 +10,7 @@ module Stairs#(
     // input [3:0] loc,        //台阶编号
     input enable_scroll,   //借用一下，实现暂停功能
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
+    input signed [$clog2(V_LENGTH)-1:0] v,
 
     // output reg [1:0] Stair_state, //特定台阶编号的台阶状态
     // output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
@@ -38,6 +39,7 @@ generate
             .frame_clk(frame_clk),
             .rstn(rstn),
             .n(n),
+            .v(v),
             .enable_scroll(enable_scroll),
             .loc_x(state_x[i]),
             .loc_y(state_y[i]),

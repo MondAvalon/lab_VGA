@@ -10,6 +10,7 @@ module SingleStair#(
     input enable_scroll,    //借用一下，实现暂停功能
     // input [3:0]   num,             // 台阶数字编号
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
+    input signed [$clog2(V_LENGTH)-1:0] v,
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
     output reg [$clog2(V_LENGTH)-1:0] loc_y, //y位置
@@ -31,14 +32,14 @@ always @(posedge frame_clk) begin
         loc_y <= Y_INIT;
         mark <= 0;
     end else begin
-        if (loc_y > 145) begin
-            loc_x <= (100 + randnum % 70);
+        if (loc_y > 146) begin
+            loc_x <= 100 + randnum % 70;
             loc_y <= 5;
-            mark <= (1 + randnum % 2);
+            mark <= randnum[31:27]%3;
         end
         else begin
         if (count_y == 0) begin  // 计数器为零，y轴移动
-            loc_y <= loc_y + 1;
+            loc_y <= loc_y + v;
         end
         end
     end

@@ -17,6 +17,7 @@ module Controllor #(
     btnu,
     btnd,
 
+    output reg [15:0] LED,
     output [3 : 0] VGA_R,
     output [3 : 0] VGA_G,
     output [3 : 0] VGA_B,
@@ -33,9 +34,6 @@ module Controllor #(
   wire [15:0] score;
   wire [15:0] high_score;
   wire left, right, shoot, space;
-  wire [7:0] n;
-  wire [$clog2(H_LENGTH)-1:0] player_x;
-  wire [$clog2(V_LENGTH)-1:0] player_y;
   wire [$clog2(H_LENGTH)-1:0] boss_x;
   wire [$clog2(V_LENGTH)-1:0] boss_y;
   // wire [$clog2(H_LENGTH)-1:0] bullet_x;
@@ -106,9 +104,11 @@ module Controllor #(
       .score(score),
       .high_score(high_score),
       .enable_scroll(enable_scroll),
-      .n(n),
-      .player_x(player_x),
-      .player_y(player_y),
+      .n(),
+      .bg_v(),
+      .player_x(),
+      .player_y(),
+//      .player_y_out(),
       .player_anime_state(),
       .enemy_x(boss_x),
       .enemy_y(boss_y),
@@ -136,12 +136,13 @@ module Controllor #(
       .game_state(game_state),
       // .bullet_index(bullet_index),
       .scroll_enabled(game_inst.enable_scroll),
-      .n(n),
+      .n(game_inst.n),
+      .v(game_inst.bg_v),
       .render_addr(render_addr),
       .score(score),
       .high_score(high_score),
-      .player_x(player_x),
-      .player_y(player_y),
+      .player_x(game_inst.player_x),
+      .player_y(game_inst.player_y),
       .player_anime_state(game_inst.player_anime_state),
       .boss_x(boss_x),
       .boss_y(boss_y),
@@ -156,22 +157,6 @@ module Controllor #(
       .rdata(rdata)
   );
 
-  // 显示
-  // DisplayUnit #(
-  //     .ADDR_WIDTH(ADDR_WIDTH),
-  //     .H_LENGTH  (H_LENGTH),
-  //     .V_LENGTH  (V_LENGTH)
-  // ) display_unit_inst (
-  //     .rstn (rstn),
-  //     .pclk (pclk),
-  //     .rdata(rdata),
-
-  //     .raddr(raddr),
-  //     .hs(VGA_HS),
-  //     .vs(VGA_VS),
-  //     .rgb_out(),
-  //     .frame(frame)
-  // );
   wire h_enable;
   wire v_enable;
   // 实例化DisplaySyncTiming同步时序模块
@@ -207,6 +192,29 @@ module Controllor #(
       .clk      (clk_5mhz),
       .pulse_out(frame_clk)
   );
+
+  always @(posedge frame_clk) begin
+    LED[15] <= LED[14];
+    LED[14] <= LED[13];
+    LED[13] <= LED[12];
+    LED[12] <= LED[11];
+    LED[11] <= LED[10];
+    LED[10] <= LED[9];
+    LED[9]  <= LED[8];
+    LED[8]  <= LED[7];
+    LED[7]  <= LED[6];
+    LED[6]  <= LED[5];
+    LED[5]  <= LED[4];
+    LED[4]  <= LED[3];
+    LED[3]  <= LED[2];
+    LED[2]  <= LED[1];
+    LED[1]  <= LED[0];
+    LED[0]  <= LED[15];
+  end
+
+  initial begin
+    LED = 16'b0000_0000_1111_1111;
+  end
 
 
 endmodule
