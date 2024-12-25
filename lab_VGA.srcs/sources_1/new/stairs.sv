@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 // 台阶模块,提供特定位置台阶的查询
 module Stairs#(
     parameter H_LENGTH  = 200, //宽度

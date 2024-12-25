@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module Game #(
     parameter ADDR_WIDTH = 15,
     parameter H_LENGTH   = 200,

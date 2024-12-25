@@ -45,23 +45,23 @@ module Controllor #(
   wire frame;
   wire frame_clk;
 
-  reg clk_72hz = 1;
-  reg [15:0] counter_72hz = 0;
-  localparam DIVIDER_72HZ = 16'd34722;  // 5MHz / 72Hz / 2
+  // reg clk_72hz = 1;
+  // reg [15:0] counter_72hz = 0;
+  // localparam DIVIDER_72HZ = 16'd34722;  // 5MHz / 72Hz / 2
 
-  always @(posedge clk_5mhz) begin
-    if (!rstn) begin
-      counter_72hz <= 0;
-      clk_72hz <= 0;
-    end else begin
-      if (counter_72hz >= DIVIDER_72HZ - 1) begin
-        counter_72hz <= 0;
-        clk_72hz <= ~clk_72hz;
-      end else begin
-        counter_72hz <= counter_72hz + 1;
-      end
-    end
-  end
+  // always @(posedge clk_5mhz) begin
+  //   if (!rstn) begin
+  //     counter_72hz <= 0;
+  //     clk_72hz <= 0;
+  //   end else begin
+  //     if (counter_72hz >= DIVIDER_72HZ - 1) begin
+  //       counter_72hz <= 0;
+  //       clk_72hz <= ~clk_72hz;
+  //     end else begin
+  //       counter_72hz <= counter_72hz + 1;
+  //     end
+  //   end
+  // end
 
   // 像素时钟
   pclk pixel_clock_inst (
@@ -91,7 +91,7 @@ module Controllor #(
 
   // 游戏逻辑
   Game game_inst (
-      .clk(pclk),
+      .clk(clk_5mhz),
       .frame_clk(frame_clk),
       .rstn(rstn),
       .render_addr(render_addr),
