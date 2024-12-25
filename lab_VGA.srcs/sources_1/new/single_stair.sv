@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module SingleStair#(
     parameter H_LENGTH  = 200, //宽度
     parameter V_LENGTH  = 150,  //高度
@@ -16,26 +17,29 @@ module SingleStair#(
 ); 
 wire [7:0] count_y;  // 计数器
 reg signed [31:0] randnum;
+localparam X_INIT = NUM * 11;
+localparam Y_INIT = NUM * 9+5;
 
-// always @(posedge frame_clk) begin
-//     if (!rstn)
-//         randnum <= 7'd0;
-//     else
-//         randnum <= $urandom % 256;
-// end
+always @(posedge frame_clk) begin
+    randnum <= {randnum[30:0], randnum[31]^randnum[27]};
+end
 
 // 在每个frame_clk上升沿更新计数器和偏移量
 always @(posedge frame_clk) begin
-    randnum <= $random(randnum);
-    if (loc_y > V_LENGTH-3) begin
-        loc_x <= (100 + randnum % 70);
-        loc_y <= 0;
-        // finish <= 0;
-        mark <= (1 + randnum % 2);
-    end
-    else begin
+    if(!rstn) begin
+        loc_x <= X_INIT;
+        loc_y <= Y_INIT;
+        mark <= 0;
+    end else begin
+        if (loc_y > 145) begin
+            loc_x <= (100 + randnum % 70);
+            loc_y <= 5;
+            mark <= (1 + randnum % 2);
+        end
+        else begin
         if (count_y == 0) begin  // 计数器为零，y轴移动
             loc_y <= loc_y + 1;
+        end
         end
     end
 end
@@ -52,10 +56,10 @@ Counter #(
 );
 
 initial begin //初始化
-    loc_x = 100;
-    loc_y = 12;
-    // finish <= 0;
-    mark = 1;
+    loc_x = X_INIT;
+    loc_y = Y_INIT;
+    mark = 0;
+    randnum = NUM * 32'h01234567;
 end
 
 endmodule

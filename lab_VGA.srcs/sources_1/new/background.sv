@@ -34,13 +34,17 @@ module background #(
   always @(posedge frame_clk) begin
     if (!rstn) begin
       offset <= 0;
-    end else if (scroll_enabled && ~count) begin
-      if (offset + H_LENGTH * v >= MAX_OFFSET) offset <= offset + H_LENGTH * v - MAX_OFFSET;
-      else offset <= offset + H_LENGTH * v;
+      offset_1 <= 0;
+    end else if (scroll_enabled && !count) begin
+      if (offset + H_LENGTH * v >= MAX_OFFSET) 
+        offset <= offset + H_LENGTH * v - MAX_OFFSET;
+      else 
+        offset <= offset + H_LENGTH * v;
 
       if (offset_1 + H_LENGTH * v_1 >= MAX_OFFSET)
         offset_1 <= offset_1 + H_LENGTH * v_1 - MAX_OFFSET;
-      else offset_1 <= offset_1 + H_LENGTH * v_1;
+      else 
+        offset_1 <= offset_1 + H_LENGTH * v_1;
 
     end
   end
@@ -88,7 +92,7 @@ module background #(
       .clk       (frame_clk),
       .rstn      (rstn),
       .load_value(n - 1),
-      .enable    (1),
+      .enable    (scroll_enabled),
       .count     (count)
   );
 

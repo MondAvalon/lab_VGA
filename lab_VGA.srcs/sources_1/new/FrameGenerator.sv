@@ -6,6 +6,7 @@ module FrameGenerator #(
     parameter MAX_BULLET = 5
 ) (
     input ram_clk,
+    input rom_clk,
     input clk,
     input frame_clk,
     input rstn,
@@ -19,14 +20,15 @@ module FrameGenerator #(
     input  [                15:0] high_score,
     input  [$clog2(H_LENGTH)-1:0] player_x,
     input  [$clog2(V_LENGTH)-1:0] player_y,
+    input  [                 1:0] player_anime_state,
     input  [$clog2(H_LENGTH)-1:0] boss_x,
     input  [$clog2(V_LENGTH)-1:0] boss_y,
-    input  [$clog2(H_LENGTH)-1:0] bullet_x      [MAX_BULLET],
-    input  [$clog2(V_LENGTH)-1:0] bullet_y      [MAX_BULLET],
-    input                         bullet_display[MAX_BULLET],
-    input  [$clog2(H_LENGTH)-1:0] stair_x       [        16],
-    input  [$clog2(V_LENGTH)-1:0] stair_y       [        16],
-    input  [                 1:0] stair_display [        16],
+    input  [$clog2(H_LENGTH)-1:0] bullet_x          [MAX_BULLET],
+    input  [$clog2(V_LENGTH)-1:0] bullet_y          [MAX_BULLET],
+    input                         bullet_display    [MAX_BULLET],
+    input  [$clog2(H_LENGTH)-1:0] stair_x           [        16],
+    input  [$clog2(V_LENGTH)-1:0] stair_y           [        16],
+    input  [                 1:0] stair_display     [        16],
 
     // output VGA signal
     input [ADDR_WIDTH-1:0] raddr,
@@ -117,16 +119,24 @@ module FrameGenerator #(
   wire background_alpha_1;
   wire [11:0] gameover_rgb;
 
-  reg [1:0] player_anime_state;
+  // reg [1:0] player_anime_state;
   render_state_t render_state, next_render_state;
   reg [6:0] object_y;  // 高128
   reg [7:0] object_x;  // 宽256
   wire [ADDR_WIDTH-1:0] object_addr;
+  // reg [ADDR_WIDTH-1:0] object_addr_prev;
   wire [11:0] object_rgb;
   wire object_alpha;
 
   assign render_addr = render_y * H_LENGTH + render_x;
   assign object_addr = {object_y, object_x};
+  // always @(posedge clk) begin
+  //   if (~rstn) begin
+  //     object_addr_prev <= 0;
+  //   end else begin
+  //     object_addr_prev <= object_addr;
+  //   end
+  // end
 
   wire [ADDR_WIDTH-1:0] render_addr_next = render_addr + 1;
 
@@ -149,7 +159,7 @@ module FrameGenerator #(
   };
   localparam NUM_Y_ROM = 36;
   // 玩家坐标
-  localparam [7:0] PLAYER_X_ROM[0:2] = {8'd0, 8'd30, 8'd60};
+  localparam [7:0] PLAYER_X_ROM[0:3] = {8'd0, 8'd30, 8'd60, 8'd90};
   localparam PLAYER_Y_ROM = 0;
   // boss坐标
   localparam BOSS_X_ROM = 150;
@@ -305,12 +315,11 @@ module FrameGenerator #(
   // 渲染状态机
   always @(posedge clk) begin
     if (~rstn) begin
-      render_x <= 0;
-      render_y <= 0;
-      vram_we <= 0;
+      render_x  <= 0;
+      render_y  <= 0;
+      vram_we   <= 0;
       vram_addr <= 0;
-      vram_rgb <= 0;
-      player_anime_state <= 0;
+      vram_rgb  <= 0;
       // next_render_state <= IDLE;
     end else begin
       vram_addr <= render_addr;
@@ -534,7 +543,7 @@ module FrameGenerator #(
 
 
   vram_bram vram_inst (
-      .clka (clk),
+      .clka (rom_clk),
       .wea  (vram_we),
       .addra(vram_addr),
       .dina (vram_rgb),
@@ -575,15 +584,15 @@ module FrameGenerator #(
 
   // 256x128
   Rom_Item objects (
-      .clka(clk),  // input wire clka
-      .addra({object_y, object_x}),  // input wire [14 : 0] addra
+      .clka(rom_clk),  // input wire clka
+      .addra(object_addr),  // input wire [14 : 0] addra
       .douta(object_rgb)  // output wire [11 : 0] douta
   );
 
   // 256x128
   Rom_Item_alpha objects_alpha (
-      .clka(clk),  // input wire clka
-      .addra({object_y, object_x}),  // input wire [14 : 0] addra
+      .clka(rom_clk),  // input wire clka
+      .addra(object_addr),  // input wire [14 : 0] addra
       .douta(object_alpha)  // output wire [0 : 0] douta
   );
 
@@ -599,7 +608,6 @@ module FrameGenerator #(
     vram_we = 0;
     vram_addr = 0;
     vram_rgb = 0;
-    player_anime_state = 0;
     render_state = IDLE;
     next_render_state = IDLE;
     score_digit = 0;

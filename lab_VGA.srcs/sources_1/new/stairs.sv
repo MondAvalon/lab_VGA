@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 // 台阶模块,提供特定位置台阶的查询
 module Stairs#(
     parameter H_LENGTH  = 200, //宽度
@@ -6,7 +7,7 @@ module Stairs#(
     input clk,
     input frame_clk,
     input rstn,
-    input [3:0] loc,        //台阶编号
+    // input [3:0] loc,        //台阶编号
     input enable_scroll,   //借用一下，实现暂停功能
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
 
@@ -44,12 +45,5 @@ generate
         );
     end
 endgenerate
-
-
-// initial begin //初始化
-//     loc_x<=0;
-//     loc_y<=0;
-//     Stair_state<=0;
-// end
 
 endmodule

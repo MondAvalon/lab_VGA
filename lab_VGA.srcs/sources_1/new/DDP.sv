@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 // 检测sync_in信号的上升沿，并输出一个同步脉冲
 module PulseSync #(
     parameter WIDTH = 1
