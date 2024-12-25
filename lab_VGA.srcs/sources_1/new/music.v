@@ -34,7 +34,7 @@ end
 
 wire menu,bgm,fail,win;
 reg begin_bgm,bgm_bgm,bgm_fail,bgm_win;
-bgm BGM(
+BGM BGM_BGM(
     .clk(clk),
     .start(start),
     .rstn(bgm_bgm),
@@ -50,7 +50,7 @@ BGM_BEGIN beginbgm(
     .speedup(speedup),
     .B(menu)
     );
-fail FAIL(
+BGM_FAIL FAIL(
     .clk(clk),
     .start(start),
     .rstn(bgm_fail),

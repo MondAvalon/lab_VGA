@@ -21,7 +21,8 @@ module Controllor #(
     output [3 : 0] VGA_G,
     output [3 : 0] VGA_B,
     output VGA_HS,
-    output VGA_VS
+    output VGA_VS,
+    output [1:0] game_state
 );
   wire pclk;
   wire clk_25mhz;
@@ -29,7 +30,7 @@ module Controllor #(
   wire [11:0] rdata;
   wire [ADDR_WIDTH-1:0] raddr;
   wire [ADDR_WIDTH-1:0] render_addr;
-  wire [1:0] game_state;
+  //wire [1:0] game_state;
   wire [15:0] score;
   wire [15:0] high_score;
   wire left, right, shoot, space;
