@@ -58,7 +58,7 @@ fail FAIL(
     .speedup(speedup),
     .B(fail)
     );
-win BGM_WIN(
+BGM_WIN WIN(
     .clk(clk),
     .start(start),
     .rstn(bgm_win),
