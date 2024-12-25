@@ -24,6 +24,7 @@ module Game #(
     output reg [                 7:0] n,
     output     [$clog2(H_LENGTH)-1:0] player_x,
     output     [$clog2(V_LENGTH)-1:0] player_y,
+    output     [                 1:0] player_anime_state,
     output     [$clog2(H_LENGTH)-1:0] enemy_x,
     output     [$clog2(V_LENGTH)-1:0] enemy_y,
     output     [$clog2(H_LENGTH)-1:0] bullet_x      [MAX_BULLET],
@@ -119,15 +120,16 @@ module Game #(
       .clk(clk),
       .frame_clk(frame_clk),
       .rstn(rstn),
-      //      .key_state(0),
       .left(left),
       .right(right),
+      .shoot(shoot),
       .enable_scroll(enable_scroll),
       .collision(0),
       .n_count(counter_player.count),
 
       .loc_x(player_x),
-      .loc_y(player_y)
+      .loc_y(player_y),
+      .player_anime_state(player_anime_state)
   );
 
   Bullet #(

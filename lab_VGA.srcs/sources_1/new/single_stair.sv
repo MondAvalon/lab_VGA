@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module SingleStair#(
     parameter H_LENGTH  = 200, //宽度
     parameter V_LENGTH  = 150,  //高度
@@ -17,17 +18,16 @@ module SingleStair#(
 wire [7:0] count_y;  // 计数器
 reg signed [31:0] randnum;
 
-// always @(posedge frame_clk) begin
-//     if (!rstn)
-//         randnum <= 7'd0;
-//     else
-//         randnum <= $urandom % 256;
-// end
+always @(posedge clk) begin
+    if (!rstn)
+        randnum <= 7'd0;
+    else
+        randnum <= $urandom % 256;
+end
 
 // 在每个frame_clk上升沿更新计数器和偏移量
 always @(posedge frame_clk) begin
-    randnum <= $random(randnum);
-    if (loc_y > V_LENGTH-3) begin
+    if (loc_y > 144) begin
         loc_x <= (100 + randnum % 70);
         loc_y <= 0;
         // finish <= 0;

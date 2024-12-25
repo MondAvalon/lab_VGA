@@ -33,7 +33,6 @@ module Controllor #(
   wire [15:0] score;
   wire [15:0] high_score;
   wire left, right, shoot, space;
-  wire enable_scroll;
   wire [7:0] n;
   wire [$clog2(H_LENGTH)-1:0] player_x;
   wire [$clog2(V_LENGTH)-1:0] player_y;
@@ -110,6 +109,7 @@ module Controllor #(
       .n(n),
       .player_x(player_x),
       .player_y(player_y),
+      .player_anime_state(),
       .enemy_x(boss_x),
       .enemy_y(boss_y),
       .bullet_x(),
@@ -127,20 +127,22 @@ module Controllor #(
       .V_LENGTH  (V_LENGTH)
   ) frame_gen_inst (
       .ram_clk(clk),
-      .clk(pclk),
+      .rom_clk(pclk),
+      .clk(clk_25mhz),
       .frame_clk(frame_clk),
       .rstn(rstn),
 
       //input in-game .x, .y, .priority, .color
       .game_state(game_state),
       // .bullet_index(bullet_index),
-      .scroll_enabled(enable_scroll),
+      .scroll_enabled(game_inst.enable_scroll),
       .n(n),
       .render_addr(render_addr),
       .score(score),
       .high_score(high_score),
       .player_x(player_x),
       .player_y(player_y),
+      .player_anime_state(game_inst.player_anime_state),
       .boss_x(boss_x),
       .boss_y(boss_y),
       .bullet_x(game_inst.bullet_x),

@@ -34,7 +34,7 @@ module background #(
   always @(posedge frame_clk) begin
     if (!rstn) begin
       offset <= 0;
-    end else if (scroll_enabled && ~count) begin
+    end else if (scroll_enabled && !count) begin
       if (offset + H_LENGTH * v >= MAX_OFFSET) offset <= offset + H_LENGTH * v - MAX_OFFSET;
       else offset <= offset + H_LENGTH * v;
 
