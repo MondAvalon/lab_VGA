@@ -3,7 +3,13 @@ module Game #(
     parameter ADDR_WIDTH = 15,
     parameter H_LENGTH   = 200,
     parameter V_LENGTH   = 150,
-    parameter MAX_BULLET = 5
+    parameter MAX_BULLET = 5,
+    parameter X_WHITH = 30,  //物体宽
+    parameter Y_WHITH = 36,  //物体高
+    parameter STAIR_X = 30,  //台阶宽
+    parameter STAIR_Y = 4,   //台阶高
+    parameter MOB_X = 70,  //敌机宽
+    parameter MOB_Y = 20  //敌机高
 ) (
     input clk,
     input rstn,
@@ -51,7 +57,41 @@ module Game #(
   // assign stair_x = {20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170};
   // assign stair_y = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 10, 20};
 
+  reg  [2:0]  collision;//"1XX"表示触底或碰到敌机失败，"010"表示加速台阶，"011"表示正常碰到台阶反弹，"00X"表示不碰撞
+  wire [$clog2(V_LENGTH)-1:0] speed_y;//返回player速度
 
+always @(posedge frame_clk) begin //触底、敌机碰撞、台阶碰撞
+    collision <= 0;
+    if (speed_y > 0) begin //台阶
+      for (int i = 0; i < 16; i = i + 1) begin
+        if (((player_y+Y_WHITH/2)==(stair_y[i]-STAIR_Y))) begin
+            if (((player_x+X_WHITH/2)>(stair_x[i]-STAIR_X))&&((player_x-X_WHITH/2)<(stair_x[i]+STAIR_X))) begin
+                if (stair_display[i] == 2'b10) begin //判断台阶种类，目前只有一种特殊台阶
+                    collision [0] <= 2'b11;
+                end 
+                else if (stair_display[i] == 2'b01) begin
+                    collision [0] <= 2'b10;
+                end
+            end
+        end
+      end
+    end
+    if (((player_y+Y_WHITH/2)==(enemy_y-MOB_Y))&&((player_x-X_WHITH/2)==(enemy_x+MOB_X))) begin //敌机逻辑左上
+        collision [2] <= 1;
+    end
+    if (((player_y+Y_WHITH/2)==(enemy_y-MOB_Y))&&((player_x+X_WHITH/2)==(enemy_x-MOB_X))) begin //敌机逻辑右上
+        collision [2] <= 1;
+    end
+    if (((player_y-Y_WHITH/2)==(enemy_y+MOB_Y))&&((player_x-X_WHITH/2)==(enemy_x+MOB_X))) begin //敌机逻辑左下
+        collision [2] <= 1;
+    end
+    if (((player_y-Y_WHITH/2)==(enemy_y+MOB_Y))&&((player_x+X_WHITH/2)==(enemy_x-MOB_X))) begin //敌机逻辑右下
+        collision [2] <= 1;
+    end
+    if (player_y == (V_LENGTH-15)) begin //触底逻辑
+        collision [2] <= 1;
+    end
+end
 
   // 状态机测试代码，需要具体修改
   // Game state definitions
@@ -125,12 +165,13 @@ module Game #(
       .right(right),
       .shoot(shoot),
       .enable_scroll(enable_scroll),
-      .collision(0),
+      .collision(collision),
       .n_count(counter_player.count),
 
       .loc_x(player_x),
       .loc_y(player_y),
-      .player_anime_state(player_anime_state)
+      .player_anime_state(player_anime_state),
+      .Speed_y(speed_y)
   );
 
   Bullet #(
@@ -184,6 +225,7 @@ module Game #(
   initial begin
     enable_scroll = 1;
     n = 3;
+    collision = 0;
   end
 
 endmodule
