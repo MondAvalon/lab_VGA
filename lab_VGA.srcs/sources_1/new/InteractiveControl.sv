@@ -103,7 +103,7 @@ module Controllor #(
       .bg_v(),
       .player_x(),
       .player_y(),
-      //      .player_y_out(),
+      .player_y_out(),
       .player_anime_state(),
       .enemy_x(boss_x),
       .enemy_y(boss_y),

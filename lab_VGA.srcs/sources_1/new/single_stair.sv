@@ -34,7 +34,7 @@ always @(posedge frame_clk) begin
     end else begin
         if (loc_y > 146) begin
             loc_x <= 100 + randnum % 70;
-            loc_y <= 5;
+            loc_y <= loc_y - 146;
             mark <= randnum[31:27]%3;
         end
         else begin
@@ -59,7 +59,7 @@ Counter #(
 initial begin //初始化
     loc_x = X_INIT;
     loc_y = Y_INIT;
-    mark = 0;
+    mark = 1;
     randnum = NUM * 32'h01234567;
 end
 

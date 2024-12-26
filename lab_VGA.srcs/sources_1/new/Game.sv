@@ -32,7 +32,7 @@ module Game #(
     output reg signed [$clog2(V_LENGTH)-1:0] bg_v,
     output            [$clog2(H_LENGTH)-1:0] player_x,
     output            [$clog2(V_LENGTH)-1:0] player_y,
-    // output            [$clog2(V_LENGTH)-1:0] player_y_out,
+    output            [$clog2(V_LENGTH)-1:0] player_y_out,
     output            [                 1:0] player_anime_state,
     output            [$clog2(H_LENGTH)-1:0] enemy_x,
     output            [$clog2(V_LENGTH)-1:0] enemy_y,
@@ -54,7 +54,7 @@ module Game #(
   // wire player_x_left = player_x - 14;
   // wire player_x_right = player_x + 15;
   // wire player_y_up = player_y - 17;
-  wire player_y_down = player_y + 18;
+  // wire player_y_down = player_y + 18;
   // wire enemy_x_left = enemy_x - 46;
   // wire enemy_x_right = enemy_x + 47;
   // wire enemy_y_up = enemy_y - 17;
@@ -71,7 +71,7 @@ module Game #(
     collision <= 3'b000;
     if (speed_y > 0) begin  //台阶
       for (int i = 0; i < MAX_STAIR; i = i + 1) begin
-        if ((player_y_down > (stair_y[i] - 7))       && (player_y_down < (stair_y[i] + 3))&&
+        if ((player_y > (stair_y[i] - 17))       && (player_y < (stair_y[i] - 7))&&
             (player_x > (stair_x[i]-STAIR_X/2)) && (player_x < (stair_x[i]+STAIR_X/2))) begin
           if (stair_display[i] == 2'b10) begin //判断台阶种类，目前只有一种特殊台阶
             collision <= 3'b011;
@@ -107,6 +107,9 @@ module Game #(
   localparam GAME_MENU = 2'b00;
   localparam GAME_PLAYING = 2'b01;
   localparam GAME_OVER = 2'b10;
+
+  localparam PLAY_READY = 2'b00;
+  localparam PLAY_GO = 2'b01;
 
   reg [1:0] next_game_state;
 
@@ -149,22 +152,27 @@ module Game #(
     end
   end
 
-  // 如果玩家y坐标小于100，则bg_v等于-speed_y，player_y_out等于100
-  // assign bg_v = (player_y < 100) ? -speed_y : 0;
-  // assign player_y_out = (player_y < 100) ? 100 : player_y;
+  // 如果玩家y坐标小于某个数，则bg_v等于-speed_y，player_y_out等于100
+  // bg_v一定为正数，否则会导致背景向上滚动
+  localparam DIV_Y = 60;
+  assign bg_v = (player_y < DIV_Y) ? (speed_y<0 ? -speed_y : 0) : 0;
+  // assign player_y_out = (player_y < DIV_Y) ? DIV_Y : player_y;
 
   Score score_inst (
       .clk(clk),
       .frame_clk(frame_clk),
       .rstn(rstn),
       .game_state(game_state),
+      .v(bg_v),
       .n_count(n_count),
 
       .score(score),
       .high_score(high_score)
   );
 
-  Player player_inst (
+  Player #(
+    .DIV_Y(DIV_Y)
+  ) player_inst (
       .clk(clk),
       .frame_clk(frame_clk),
       .rstn(rstn),
