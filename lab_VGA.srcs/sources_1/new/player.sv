@@ -2,10 +2,10 @@
 module Player #(
     parameter ADDR_WIDTH = 15,
     parameter SPEED_X = 4,
-    parameter signed BUNCE_V = -11,  //回弹初速度
-    parameter G_CONST = 1,  //重力加速度
+    // parameter signed BUNCE_V = -11,  //回弹初速度
+    // parameter G_CONST = 1,  //重力加速度
     parameter addr_x = 100,  //输入起始中心x坐标
-    parameter addr_y = 75,  //输入起始中心y坐标
+    parameter addr_y = 60,  //输入起始中心y坐标
     parameter H_LENGTH = 200,  //宽度
     parameter V_LENGTH = 150  //高度
 ) (
@@ -21,37 +21,33 @@ module Player #(
     input [7:0] n_count,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x,  //x位置
-    output reg [$clog2(V_LENGTH)-1:0] loc_y,  //y位置
+    output [$clog2(V_LENGTH)-1:0] loc_y,  //y位置
     output reg [1:0] player_anime_state,  //玩家动画状态
-    // output reg [$clog2(V_LENGTH)-1:0] Speed_y
-    output reg signed [$clog2(V_LENGTH)-1:0] speed_y
+    output reg signed [$clog2(V_LENGTH):0] speed_y
+    // output reg arrow_y // 1:下降 0:上升
 );
   localparam X_WHITH = 30;  //物体宽
   localparam Y_WHITH = 36;  //物体长
 
-  reg arrow;  //判断左右移动方向，取1为右，0为左
+  reg arrow_x;  //判断左右移动方向，取1为右，0为左
   reg [3:0] speed_x;
   reg [4:0] ani_count = 0;  //计数器
   reg [1:0] ani_state_buf;
-
-  // reg [3:0] count_g = 0;  // 计数器
-
-  // always @(negedge n_count) begin
-  //   count_g <= count_g == 4 ? 0 : count_g + 1;
-  // end
+  reg signed [$clog2(V_LENGTH):0] signed_loc_y;
+  assign loc_y = signed_loc_y[$clog2(V_LENGTH)] ? 0 : signed_loc_y[$clog2(V_LENGTH)-1:0];
 
   // 在每个frame_clk上升沿更新计数器和偏移量
   always @(posedge frame_clk) begin
     if (!rstn) begin
       loc_x <= addr_x;
-      loc_y <= addr_y;
+      signed_loc_y <= addr_y;
       //   Speed_y <= 0;
       player_anime_state <= 0;
     end else begin
       if (!n_count) begin  // 计数器为零，移动
-        loc_y <= loc_y + speed_y/2;
+        signed_loc_y <= signed_loc_y + (speed_y >>> 1);
 
-        if (arrow) begin
+        if (arrow_x) begin
           if (loc_x > (H_LENGTH - 20)) begin
             loc_x <= 20;
           end else begin
@@ -81,7 +77,7 @@ module Player #(
           end
           2: begin
             player_anime_state <= 2;
-            ani_state_buf <= 0;
+            ani_state_buf <= 3;
           end
           3: begin
             player_anime_state <= 1;
@@ -104,15 +100,15 @@ module Player #(
   always @(posedge frame_clk) begin
     if (!rstn) begin
       speed_x <= 0;
-      arrow   <= 0;
+      arrow_x <= 0;
     end else begin
       speed_x <= 0;
       if (right) begin  //键盘输入
         speed_x <= SPEED_X;
-        arrow   <= 1;
+        arrow_x <= 1;
       end else if (left) begin
         speed_x <= SPEED_X;
-        arrow   <= 0;
+        arrow_x <= 0;
       end
     end
   end
@@ -122,13 +118,14 @@ module Player #(
     if (!rstn) begin
       speed_y <= 0;
     end else begin
-      if (collision[1] || ((loc_y > V_LENGTH - 20) && speed_y > 0)) begin
+      if ((collision[1] || (signed_loc_y > V_LENGTH - 20)) && speed_y > 0) begin
         speed_y <= -speed_y;
-      end else if(!n_count) begin
-        if (speed_y == 12) begin
+      end else if (!n_count) begin
+        if (speed_y == 14) begin
           speed_y <= speed_y;
-        end else begin
-          speed_y <= speed_y + G_CONST;
+        end else 
+        begin
+          speed_y <= speed_y + 1;
         end
       end
     end
@@ -136,8 +133,8 @@ module Player #(
 
   initial begin  //初始化
     loc_x <= addr_x;
-    loc_y <= addr_y;
-    arrow <= 0;
+    signed_loc_y <= addr_y;
+    arrow_x <= 0;
     speed_x <= 0;
     speed_y <= 0;
     player_anime_state <= 0;

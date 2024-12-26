@@ -50,7 +50,7 @@ module Bullet #(
     end else begin
       // 冷却时间更新
       if (shoot_cd > 0) shoot_cd <= shoot_cd - 1;
-      else if (shoot) shoot_cd <= 20;
+      else if (shoot) shoot_cd <= 25;
 
       // 重置碰撞状态
       collision <= 0;

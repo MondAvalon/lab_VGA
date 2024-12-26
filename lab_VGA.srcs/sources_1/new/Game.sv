@@ -3,6 +3,7 @@ module Game #(
     parameter H_LENGTH = 200,
     parameter V_LENGTH = 150,
     parameter MAX_BULLET = 5,
+    parameter MAX_STAIR = 10,
     parameter X_WHITH = 30,  //物体宽
     parameter Y_WHITH = 36,  //物体高
     parameter STAIR_X = 30,  //台阶宽
@@ -13,7 +14,7 @@ module Game #(
     input clk,
     input rstn,
     input frame_clk,
-    input [ADDR_WIDTH-1:0] render_addr,  //渲染坐标/地址
+    // input [ADDR_WIDTH-1:0] render_addr,  //渲染坐标/地址
 
     // 游戏键盘输入
     input left,
@@ -39,9 +40,9 @@ module Game #(
     output            [$clog2(H_LENGTH)-1:0] bullet_x          [MAX_BULLET],
     output            [$clog2(V_LENGTH)-1:0] bullet_y          [MAX_BULLET],
     output                                   bullet_display    [MAX_BULLET],
-    output            [$clog2(H_LENGTH)-1:0] stair_x           [        16],
-    output            [$clog2(V_LENGTH)-1:0] stair_y           [        16],
-    output            [                 1:0] stair_display     [        16]
+    output            [$clog2(H_LENGTH)-1:0] stair_x           [ MAX_STAIR],
+    output            [$clog2(V_LENGTH)-1:0] stair_y           [ MAX_STAIR],
+    output            [                 1:0] stair_display     [ MAX_STAIR]
 );
 
   wire [7:0] n_count;
@@ -53,7 +54,7 @@ module Game #(
   // wire player_x_left = player_x - 14;
   // wire player_x_right = player_x + 15;
   // wire player_y_up = player_y - 17;
-  // wire player_y_down = player_y + 18;
+  wire player_y_down = player_y + 18;
   // wire enemy_x_left = enemy_x - 46;
   // wire enemy_x_right = enemy_x + 47;
   // wire enemy_y_up = enemy_y - 17;
@@ -63,19 +64,19 @@ module Game #(
   // assign stair_y = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 10, 20};
 
   reg  [2:0]  collision;//"1XX"表示触底或碰到敌机失败，"010"表示加速台阶，"011"表示正常碰到台阶反弹，"00X"表示不碰撞
-  wire signed [$clog2(V_LENGTH)-1:0] speed_y;  //返回player速度
+  wire signed [$clog2(V_LENGTH):0] speed_y;  //返回player速度
+  // wire arrow_y;  //返回player方向 1为下降，0为上升
 
   always @(posedge frame_clk) begin  //触底、敌机碰撞、台阶碰撞
     collision <= 3'b000;
     if (speed_y > 0) begin  //台阶
-      for (int i = 0; i < 16; i = i + 1) begin
-        if (player_y > (stair_y[i] - 6) && player_y < (stair_y[i] + 6)) begin
-          if ((player_x>(stair_x[i]-STAIR_X/2))&&((player_x)<(stair_x[i]+STAIR_X/2))) begin
-            if (stair_display[i] == 2'b10) begin //判断台阶种类，目前只有一种特殊台阶
-              collision <= 3'b011;
-            end else if (stair_display[i] == 2'b01) begin
-              collision <= 3'b010;
-            end
+      for (int i = 0; i < MAX_STAIR; i = i + 1) begin
+        if ((player_y_down > (stair_y[i] - 7))       && (player_y_down < (stair_y[i] + 3))&&
+            (player_x > (stair_x[i]-STAIR_X/2)) && (player_x < (stair_x[i]+STAIR_X/2))) begin
+          if (stair_display[i] == 2'b10) begin //判断台阶种类，目前只有一种特殊台阶
+            collision <= 3'b011;
+          end else if (stair_display[i] == 2'b01) begin
+            collision <= 3'b010;
           end
         end
       end
@@ -96,6 +97,9 @@ module Game #(
     // if (player_y == (V_LENGTH - 15)) begin  //触底逻辑
     //   collision[2] <= 1;
     // end
+    if (collision) begin
+      collision <= 3'b000;
+    end
   end
 
   // 状态机测试代码，需要具体修改
@@ -175,6 +179,7 @@ module Game #(
       .loc_y(player_y),
       .player_anime_state(player_anime_state),
       .speed_y(speed_y)
+      // .arrow_y(arrow_y)
   );
 
   Bullet #(
@@ -198,7 +203,11 @@ module Game #(
       .display(bullet_display)
   );
 
-  Stairs stairs_inst (
+  Stairs #(
+      .H_LENGTH (H_LENGTH),
+      .V_LENGTH (V_LENGTH),
+      .MAX_STAIR(MAX_STAIR)
+  ) stairs_inst (
       .clk(clk),
       .frame_clk(frame_clk),
       .rstn(rstn),

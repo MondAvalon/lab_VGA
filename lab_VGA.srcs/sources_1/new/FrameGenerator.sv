@@ -3,7 +3,8 @@ module FrameGenerator #(
     parameter ADDR_WIDTH = 15,
     parameter H_LENGTH   = 200,
     parameter V_LENGTH   = 150,
-    parameter MAX_BULLET = 5
+    parameter MAX_BULLET = 5,
+    parameter MAX_STAIR  = 10
 ) (
     input ram_clk,
     input rom_clk,
@@ -12,24 +13,23 @@ module FrameGenerator #(
     input rstn,
 
     //input in-game x, y
-    input         [                 1:0] game_state,
-    input                                scroll_enabled,
-    input         [                 7:0] n,
-    input  signed [$clog2(V_LENGTH)-1:0] v,
-    output        [      ADDR_WIDTH-1:0] render_addr,
-    input         [                15:0] score,
-    input         [                15:0] high_score,
-    input         [$clog2(H_LENGTH)-1:0] player_x,
-    input         [$clog2(V_LENGTH)-1:0] player_y,
-    input         [                 1:0] player_anime_state,
-    input         [$clog2(H_LENGTH)-1:0] boss_x,
-    input         [$clog2(V_LENGTH)-1:0] boss_y,
-    input         [$clog2(H_LENGTH)-1:0] bullet_x          [MAX_BULLET],
-    input         [$clog2(V_LENGTH)-1:0] bullet_y          [MAX_BULLET],
-    input                                bullet_display    [MAX_BULLET],
-    input         [$clog2(H_LENGTH)-1:0] stair_x           [        16],
-    input         [$clog2(V_LENGTH)-1:0] stair_y           [        16],
-    input         [                 1:0] stair_display     [        16],
+    input        [                 1:0] game_state,
+    input                               scroll_enabled,
+    input        [                 7:0] n,
+    input signed [$clog2(V_LENGTH)-1:0] v,
+    input        [                15:0] score,
+    input        [                15:0] high_score,
+    input        [$clog2(H_LENGTH)-1:0] player_x,
+    input        [$clog2(V_LENGTH)-1:0] player_y,
+    input        [                 1:0] player_anime_state,
+    input        [$clog2(H_LENGTH)-1:0] boss_x,
+    input        [$clog2(V_LENGTH)-1:0] boss_y,
+    input        [$clog2(H_LENGTH)-1:0] bullet_x          [MAX_BULLET],
+    input        [$clog2(V_LENGTH)-1:0] bullet_y          [MAX_BULLET],
+    input                               bullet_display    [MAX_BULLET],
+    input        [$clog2(H_LENGTH)-1:0] stair_x           [ MAX_STAIR],
+    input        [$clog2(V_LENGTH)-1:0] stair_y           [ MAX_STAIR],
+    input        [                 1:0] stair_display     [ MAX_STAIR],
 
     // output VGA signal
     input [ADDR_WIDTH-1:0] raddr,
@@ -122,13 +122,14 @@ module FrameGenerator #(
 
   // reg [1:0] player_anime_state;
   render_state_t render_state, next_render_state;
-  reg [6:0] object_y;  // 高128
-  reg [7:0] object_x;  // 宽256
+  reg  [           6:0] object_y;  // 高128
+  reg  [           7:0] object_x;  // 宽256
   wire [ADDR_WIDTH-1:0] object_addr;
   // reg [ADDR_WIDTH-1:0] object_addr_prev;
-  wire [11:0] object_rgb;
-  wire object_alpha;
+  wire [          11:0] object_rgb;
+  wire                  object_alpha;
 
+  wire [ADDR_WIDTH-1:0] render_addr;
   assign render_addr = render_y * H_LENGTH + render_x;
   assign object_addr = {object_y, object_x};
   // always @(posedge clk) begin
@@ -266,7 +267,7 @@ module FrameGenerator #(
       RENDER_STAIR: begin
         next_render_state = (!(render_x ^ stair_x_right) && 
                              !(render_y ^ stair_y_down) && 
-                             stair_index==15) ? 
+                             stair_index==MAX_STAIR-1) ? 
                             RENDER_BULLET : 
                             RENDER_STAIR;
       end
@@ -365,7 +366,7 @@ module FrameGenerator #(
           vram_rgb <= object_rgb;
           if (!(render_x ^ stair_x_right)) begin
             if (!(render_y ^ stair_y_down)) begin
-              if (!(stair_index ^ 15)) begin  // 全部台阶渲染完成
+              if (!(stair_index ^ MAX_STAIR - 1)) begin  // 全部台阶渲染完成
                 // next_render_state <= RENDER_BULLET;
                 render_x <= bullet_x_left;
                 render_y <= bullet_y_up;

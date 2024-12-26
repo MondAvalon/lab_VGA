@@ -29,17 +29,12 @@ module Controllor #(
   wire clk_5mhz;
   wire [11:0] rdata;
   wire [ADDR_WIDTH-1:0] raddr;
-  wire [ADDR_WIDTH-1:0] render_addr;
   wire [1:0] game_state;
   wire [15:0] score;
   wire [15:0] high_score;
   wire left, right, shoot, space;
   wire [$clog2(H_LENGTH)-1:0] boss_x;
   wire [$clog2(V_LENGTH)-1:0] boss_y;
-  // wire [$clog2(H_LENGTH)-1:0] bullet_x;
-  // wire [$clog2(V_LENGTH)-1:0] bullet_y;
-  // wire [$clog2(MAX_BULLET)-1:0] bullet_index;
-  // wire bullet_display;
   wire frame;
   wire frame_clk;
 
@@ -92,7 +87,7 @@ module Controllor #(
       .clk(clk_5mhz),
       .frame_clk(frame_clk),
       .rstn(rstn),
-      .render_addr(render_addr),
+      //   .render_addr(render_addr),
       .left(left),
       .right(right),
       .shoot(shoot),
@@ -108,7 +103,7 @@ module Controllor #(
       .bg_v(),
       .player_x(),
       .player_y(),
-//      .player_y_out(),
+      //      .player_y_out(),
       .player_anime_state(),
       .enemy_x(boss_x),
       .enemy_y(boss_y),
@@ -138,7 +133,7 @@ module Controllor #(
       .scroll_enabled(game_inst.enable_scroll),
       .n(game_inst.n),
       .v(game_inst.bg_v),
-      .render_addr(render_addr),
+      //   .render_addr(),
       .score(score),
       .high_score(high_score),
       .player_x(game_inst.player_x),

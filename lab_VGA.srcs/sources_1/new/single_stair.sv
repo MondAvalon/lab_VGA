@@ -19,7 +19,7 @@ module SingleStair#(
 wire [7:0] count_y;  // 计数器
 reg signed [31:0] randnum;
 localparam X_INIT = NUM * 11;
-localparam Y_INIT = NUM * 9+5;
+localparam Y_INIT = (NUM * 999+5)%V_LENGTH;
 
 always @(posedge frame_clk) begin
     randnum <= {randnum[30:0], randnum[31]^randnum[27]};
