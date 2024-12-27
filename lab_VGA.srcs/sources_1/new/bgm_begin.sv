@@ -32,7 +32,7 @@ module BGM_BEGIN (
   always @(posedge clk_out, negedge rstn)
     if (~rstn) state <= 0;
     else if (start) begin
-      if (state != 160) state <= state + 1;
+      if (state != 140) state <= state + 1;
       else state <= 0;
     end
 
@@ -196,28 +196,6 @@ module BGM_BEGIN (
         138: m = 0;
         139: m = 0;
         140: m = 0;
-
-        141: m = 0;
-        142: m = 0;
-        143: m = 0;
-        144: m = 0;
-        145: m = 0;
-        146: m = 0;
-        147: m = 0;
-        148: m = 0;
-        149: m = 0;
-        150: m = 0;
-        151: m = 0;
-        152: m = 0;
-        153: m = 0;
-        154: m = 0;
-        155: m = 0;
-        156: m = 0;
-        157: m = 0;
-        158: m = 0;
-        159: m = 0;
-        160: m = 0;
-
 
         default: m = 0;
       endcase
