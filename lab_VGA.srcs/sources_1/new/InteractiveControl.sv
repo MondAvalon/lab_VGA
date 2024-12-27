@@ -35,8 +35,6 @@ module Controllor #(
   wire [15:0] score;
   wire [15:0] high_score;
   wire left, right, shoot, space;
-  wire [$clog2(H_LENGTH)-1:0] boss_x;
-  wire [$clog2(V_LENGTH)-1:0] boss_y;
   wire frame;
   wire frame_clk;
   assign clk_o = pclk;
@@ -108,8 +106,10 @@ module Controllor #(
       .player_y(),
       .player_y_out(),
       .player_anime_state(),
-      .enemy_x(boss_x),
-      .enemy_y(boss_y),
+      .enemy_x(),
+      .enemy_y(),
+      .enemy_display(),
+      .enemy_HP(),
       .bullet_x(),
       .bullet_y(),
       .bullet_display(),
@@ -142,8 +142,10 @@ module Controllor #(
       .player_x(game_inst.player_x),
       .player_y(game_inst.player_y),
       .player_anime_state(game_inst.player_anime_state),
-      .boss_x(boss_x),
-      .boss_y(boss_y),
+      .boss_x(game_inst.enemy_x),
+      .boss_y(game_inst.enemy_y),
+      .boss_display(game_inst.enemy_display),
+      .boss_HP(game_inst.enemy_HP),
       .bullet_x(game_inst.bullet_x),
       .bullet_y(game_inst.bullet_y),
       .bullet_display(game_inst.bullet_display),

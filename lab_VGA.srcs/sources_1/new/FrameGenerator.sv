@@ -1,10 +1,11 @@
 //获取VGA信号的同步信号，根据游戏对象的坐标与优先级等生成一个固定的分辨率的图像
 module FrameGenerator #(
     parameter ADDR_WIDTH = 15,
-    parameter H_LENGTH   = 200,
-    parameter V_LENGTH   = 150,
+    parameter H_LENGTH = 200,
+    parameter V_LENGTH = 150,
     parameter MAX_BULLET = 5,
-    parameter MAX_STAIR  = 10
+    parameter MAX_STAIR = 10,
+    parameter MAX_HP = 20
 ) (
     input ram_clk,
     input rom_clk,
@@ -24,6 +25,8 @@ module FrameGenerator #(
     input        [                 1:0] player_anime_state,
     input        [$clog2(H_LENGTH)-1:0] boss_x,
     input        [$clog2(V_LENGTH)-1:0] boss_y,
+    input                               boss_display,
+    input        [                 9:0] boss_HP,
     input        [$clog2(H_LENGTH)-1:0] bullet_x          [MAX_BULLET],
     input        [$clog2(V_LENGTH)-1:0] bullet_y          [MAX_BULLET],
     input                               bullet_display    [MAX_BULLET],
@@ -39,24 +42,29 @@ module FrameGenerator #(
   localparam X_MAX = H_LENGTH - 1;
   localparam Y_MAX = V_LENGTH - 1;
 
-  typedef enum {
-    GAME_MENU,
-    GAME_PLAYING,
-    GAME_OVER
-  } game_state_t;
+  // typedef enum {
+  //   GAME_MENU,
+  //   GAME_PLAYING,
+  //   GAME_OVER,
+  //   GAME_WIN
+  // } game_state_t;
+  localparam GAME_MENU = 2'b00;
+  localparam GAME_PLAYING = 2'b01;
+  localparam GAME_OVER = 2'b10;
+  localparam GAME_WIN = 2'b11;
 
   typedef enum {
     IDLE,
     RENDER_BACKGROUND,
     RENDER_STAIR,
-    RENDER_PUDDING,
-    RENDER_OBSTACLE,
     RENDER_BULLET,
     RENDER_BOSS,
     RENDER_PLAYER,
+    RENDER_WIN,
+    RENDER_BACKGROUND_1,
+    RENDER_BOSS_HP,
     RENDER_SCORE,
     RENDER_HIGH_SCORE,
-    RENDER_BACKGROUND_1,
     RENDER_FLAN
   } render_state_t;
 
@@ -91,6 +99,11 @@ module FrameGenerator #(
   assign boss_y_up = boss_y - 17;
   assign boss_y_down = boss_y + 18;
 
+  assign flan_x_left = player_x - 14;
+  assign flan_x_right = player_x + 15;
+  assign flan_y_up = player_y - 52;
+  assign flan_y_down = player_y - 17;
+
   assign bullet_x_left = bullet_x[bullet_index] - 4;
   assign bullet_x_right = bullet_x[bullet_index] + 4;
   assign bullet_y_up = bullet_y[bullet_index] - 7;
@@ -119,6 +132,7 @@ module FrameGenerator #(
   wire [11:0] background_rgb_1;  //前景
   wire background_alpha_1;
   wire [11:0] gameover_rgb;
+  wire win_alpha;
 
   // reg [1:0] player_anime_state;
   render_state_t render_state, next_render_state;
@@ -177,6 +191,10 @@ module FrameGenerator #(
   // 平台坐标
   localparam [7:0] STAIR_X_ROM[2:1] = {8'd0, 8'd30};
   localparam STAIR_Y_ROM = 62;
+  // 芙兰朵露坐标
+  localparam FLAN_X_ROM = 120;
+  localparam FLAN_Y_ROM = 0;
+
 
   reg [1:0] score_digit;  // 当前渲染第几位数字(0-3)
   reg [1:0] next_score_digit;  // 下一个渲染的数字位数
@@ -215,6 +233,10 @@ module FrameGenerator #(
       RENDER_STAIR: begin
         object_x = STAIR_X_ROM[stair_display[stair_index]] + render_x - stair_x_left;
         object_y = STAIR_Y_ROM + render_y - stair_y_up;
+      end
+      RENDER_FLAN: begin
+        object_x = FLAN_X_ROM + render_x - flan_x_left;
+        object_y = FLAN_Y_ROM + render_y - flan_y_up;
       end
       default: begin
         object_x = 0;
@@ -256,9 +278,18 @@ module FrameGenerator #(
         next_render_state = generation_begin ? RENDER_BACKGROUND : IDLE;
       end
       RENDER_BACKGROUND: begin
-        next_render_state = (!(render_x ^ X_MAX) && !(render_y ^ Y_MAX)) ? 
-                            (((game_state ^ GAME_MENU) && (game_state ^ GAME_OVER)) ? RENDER_STAIR: RENDER_HIGH_SCORE) : 
-                            RENDER_BACKGROUND;
+        // next_render_state = (!(render_x ^ X_MAX) && !(render_y ^ Y_MAX)) ? 
+        //                     (((game_state ^ GAME_MENU) && (game_state ^ GAME_OVER)) ? RENDER_STAIR: RENDER_HIGH_SCORE) : 
+        //                     RENDER_BACKGROUND;
+        if (!(render_x ^ X_MAX) && !(render_y ^ Y_MAX)) begin
+          case (game_state)
+            GAME_PLAYING: next_render_state = RENDER_STAIR;
+            GAME_WIN: next_render_state = RENDER_FLAN;
+            default: next_render_state = RENDER_HIGH_SCORE;
+          endcase
+        end else begin
+          next_render_state = RENDER_BACKGROUND;
+        end
       end
       RENDER_STAIR: begin
         next_render_state = (!(render_x ^ stair_x_right) && 
@@ -279,16 +310,30 @@ module FrameGenerator #(
         // end
       end
       RENDER_PLAYER: begin
-        next_render_state = !(render_x ^ player_x_right) && !(render_y ^ player_y_down) ? RENDER_BOSS : RENDER_PLAYER;
+        // next_render_state = !(render_x ^ player_x_right) && !(render_y ^ player_y_down) ? RENDER_BOSS : RENDER_PLAYER;
+        if (!(render_x ^ player_x_right) && !(render_y ^ player_y_down)) begin
+          case (game_state)
+            GAME_PLAYING: next_render_state = RENDER_BOSS;
+            GAME_WIN: next_render_state = RENDER_WIN;
+          endcase
+        end else begin
+          next_render_state = RENDER_PLAYER;
+        end
+      end
+      RENDER_WIN: begin
+        next_render_state = (!(render_x ^ X_MAX) && !(render_y ^ Y_MAX)) ? IDLE : RENDER_WIN;
       end
       RENDER_BOSS: begin
-        next_render_state = !(render_x ^ boss_x_right) && !(render_y ^ boss_y_down) ? RENDER_BACKGROUND_1 : RENDER_BOSS;
+        next_render_state = (!(render_x ^ boss_x_right) && !(render_y ^ boss_y_down)) ? RENDER_BACKGROUND_1 : RENDER_BOSS;
       end
       RENDER_BACKGROUND_1: begin
-        next_render_state = !(render_x ^ X_MAX) && !(render_y ^ Y_MAX) ? RENDER_SCORE : RENDER_BACKGROUND_1;
+        next_render_state = (!(render_x ^ X_MAX) && !(render_y ^ Y_MAX)) ? RENDER_BOSS_HP : RENDER_BACKGROUND_1;
+      end
+      RENDER_BOSS_HP: begin
+        next_render_state = (!(render_x ^ X_MAX) && !(render_y ^ 1)) ? RENDER_SCORE : RENDER_BOSS_HP;
       end
       RENDER_SCORE: begin
-        next_render_state = !(render_x ^ SCORE_POS_X_MAX[3]) && !(render_y ^ SCORE_POS_Y_MAX) ? 
+        next_render_state = (!(render_x ^ SCORE_POS_X_MAX[3]) && !(render_y ^ SCORE_POS_Y_MAX)) ? 
                               IDLE : 
                               RENDER_SCORE;
         // next_score_digit = !(render_x ^ SCORE_POS_X_MAX[score_digit]) && !(render_y ^ SCORE_POS_Y_MAX) ? 
@@ -296,16 +341,19 @@ module FrameGenerator #(
         //                     score_digit;
       end
       RENDER_HIGH_SCORE: begin
-        next_render_state = !(render_x ^ SCORE_POS_X_MAX[3]) && !(render_y ^ SCORE_POS_Y_MAX) ? 
+        next_render_state = (!(render_x ^ SCORE_POS_X_MAX[3]) && !(render_y ^ SCORE_POS_Y_MAX)) ? 
                             IDLE : 
                             RENDER_HIGH_SCORE;
         // next_score_digit = !(render_x ^ SCORE_POS_X_MAX[score_digit]) && !(render_y ^ SCORE_POS_Y_MAX) ? 
         //                     (!(render_x ^ SCORE_POS_X_MAX[3]) ? 0 : score_digit + 1) : 
         //                     score_digit;
       end
+      RENDER_FLAN: begin
+        next_render_state = !(render_x ^ flan_x_right) && !(render_y ^ flan_y_down) ? RENDER_PLAYER : RENDER_FLAN;
+      end
       default: begin
         next_render_state = IDLE;
-        next_score_digit  = 0;
+        // next_score_digit  = 0;
       end
     endcase
   end
@@ -330,25 +378,43 @@ module FrameGenerator #(
         end
         RENDER_BACKGROUND: begin
           vram_we <= 1;
-          vram_rgb <= ((game_state^GAME_MENU))?((game_state^GAME_PLAYING)?gameover_rgb:background_rgb ):menu_rgb;
-          // case (game_state)
-          //   GAME_PLAYING: vram_rgb <= background_rgb;
-          //   GAME_MENU: vram_rgb <= menu_rgb;
-          //   GAME_OVER: vram_rgb <= gameover_rgb;
-          //   default: vram_rgb <= 0;
-          // endcase
+          score_digit <= 0;
+          // vram_rgb <= ((game_state^GAME_MENU))?((game_state^GAME_PLAYING)?gameover_rgb:background_rgb ):menu_rgb;
+          case (game_state)
+            GAME_PLAYING, GAME_WIN: vram_rgb <= background_rgb;
+            GAME_MENU: vram_rgb <= menu_rgb;
+            GAME_OVER: vram_rgb <= gameover_rgb;
+            default: vram_rgb <= 0;
+          endcase
 
           if (!(render_x ^ X_MAX)) begin
             if (!(render_y ^ Y_MAX)) begin  //完成全部背景的渲染
-              if (!((game_state ^ GAME_MENU) && (game_state ^ GAME_OVER))) begin
-                // next_render_state <= RENDER_HIGH_SCORE;
-                render_x <= SCORE_POS_X[0];
-                render_y <= SCORE_POS_Y;
-              end else if (!(game_state ^ GAME_PLAYING)) begin
-                // next_render_state <= RENDER_STAIR;
-                render_x <= stair_x_left;
-                render_y <= stair_y_up;
-              end
+              // if (!((game_state ^ GAME_MENU) && (game_state ^ GAME_OVER))) begin
+              //   // next_render_state <= RENDER_HIGH_SCORE;
+              //   render_x <= SCORE_POS_X[0];
+              //   render_y <= SCORE_POS_Y;
+              // end else if (!(game_state ^ GAME_PLAYING)) begin
+              //   // next_render_state <= RENDER_STAIR;
+              //   render_x <= stair_x_left;
+              //   render_y <= stair_y_up;
+              // end
+              case (game_state)
+                GAME_PLAYING: begin
+                  // next_render_state <= RENDER_STAIR;
+                  render_x <= stair_x_left;
+                  render_y <= stair_y_up;
+                end
+                GAME_WIN: begin
+                  // next_render_state <= RENDER_FLAN;
+                  render_x <= flan_x_left;
+                  render_y <= flan_y_up;
+                end
+                default: begin
+                  // next_render_state <= RENDER_HIGH_SCORE;
+                  render_x <= SCORE_POS_X[0];
+                  render_y <= SCORE_POS_Y;
+                end
+              endcase
             end else begin  //完成一行的渲染
               render_y <= render_y + 1;
               render_x <= 0;
@@ -358,8 +424,9 @@ module FrameGenerator #(
           end
         end
         RENDER_STAIR: begin
-          vram_we  <= object_alpha && stair_display[stair_index];
+          vram_we <= object_alpha && stair_display[stair_index];
           vram_rgb <= object_rgb;
+          score_digit <= 0;
           if (!(render_x ^ stair_x_right)) begin
             if (!(render_y ^ stair_y_down)) begin
               if (!(stair_index ^ MAX_STAIR - 1)) begin  // 全部台阶渲染完成
@@ -381,8 +448,9 @@ module FrameGenerator #(
           end
         end
         RENDER_BULLET: begin
-          vram_we  <= object_alpha && bullet_display[bullet_index];
+          vram_we <= object_alpha && bullet_display[bullet_index];
           vram_rgb <= object_rgb;
+          score_digit <= 0;
           if (!(render_x ^ bullet_x_right)) begin
             if (!(render_y ^ bullet_y_down)) begin
               if (!(bullet_index ^ (MAX_BULLET - 1))) begin  // 全部子弹渲染完成
@@ -402,49 +470,20 @@ module FrameGenerator #(
           end else begin
             render_x <= render_x + 1;
           end
-
-          // // 如果display为0，跳到下一个子弹渲染
-          // if (!(bullet_display[bullet_index])) begin
-          //   if (bullet_index<MAX_BULLET) begin
-          //     bullet_index <= bullet_index + 1;
-          //     render_x <= bullet_x_left_next;
-          //     render_y <= bullet_y_up_next;
-          //   end else begin
-          //     // next_render_state <= RENDER_PLAYER;
-          //     render_x <= player_x_left;
-          //     render_y <= player_y_up;
-          //     bullet_index <= 0;
-          //   end
-          // end else begin  // 子弹渲染
-          //   if(!(render_x ^ bullet_x_right)) begin
-          //     if(!(render_y ^ bullet_y_down)) begin
-          //       if(bullet_index<MAX_BULLET) begin
-          //         bullet_index <= bullet_index + 1;
-          //         render_x <= bullet_x_left_next;
-          //         render_y <= bullet_y_up_next;
-          //       end else begin
-          //         // next_render_state <= RENDER_PLAYER;
-          //         render_x <= player_x_left;
-          //         render_y <= player_y_up;
-          //         bullet_index <= 0;
-          //       end
-          //     end else begin
-          //       render_x <= bullet_x_left;
-          //       render_y <= render_y + 1;
-          //     end
-          //   end else begin
-          //     render_x <= render_x + 1;
-          //   end
-          // end
         end
         RENDER_PLAYER: begin
-          vram_we  <= object_alpha;
+          vram_we <= object_alpha;
           vram_rgb <= object_rgb;
+          score_digit <= 0;
           if (!(render_x ^ player_x_right)) begin
             if (!(render_y ^ player_y_down)) begin
               // next_render_state <= RENDER_BOSS;
               render_x <= boss_x_left;
               render_y <= boss_y_up;
+              if (game_state == GAME_WIN) begin
+                render_x <= 0;
+                render_y <= 0;
+              end
             end else begin
               render_x <= player_x_left;
               render_y <= render_y + 1;
@@ -453,10 +492,27 @@ module FrameGenerator #(
             render_x <= render_x + 1;
           end
         end
+        RENDER_WIN: begin
+          vram_we <= win_alpha;
+          vram_rgb <= 12'hfff;
+          score_digit <= 0;
+          if (!(render_x ^ X_MAX)) begin
+            if (!(render_y ^ Y_MAX)) begin  //完成全部的渲染
+              // next_render_state <= IDLE
+              render_x <= 0;
+              render_y <= 0;
+            end else begin  //完成一行的渲染
+              render_y <= render_y + 1;
+              render_x <= 0;
+            end
+          end else begin
+            render_x <= render_x + 1;
+          end
+        end
         RENDER_BOSS: begin
-          vram_we  <= object_alpha;
+          vram_we <= object_alpha && boss_display;
           vram_rgb <= object_rgb;
-          // vram_rgb <= object_rgb;
+          score_digit <= 0;
           if (!(render_x ^ boss_x_right)) begin
             if (!(render_y ^ boss_y_down)) begin
               // next_render_state <= RENDER_BACKGROUND_1;
@@ -471,19 +527,66 @@ module FrameGenerator #(
           end
         end
         RENDER_BACKGROUND_1: begin
-          vram_we  <= background_alpha_1;
+          vram_we <= background_alpha_1;
           vram_rgb <= background_rgb_1;
-          if (!(render_x ^ X_MAX)) begin
-            if (!(render_y ^ Y_MAX)) begin  //完成全部背景的渲染
-              // next_render_state <= RENDER_SCORE;
-              render_x <= SCORE_POS_X[0];
-              render_y <= SCORE_POS_Y;
-            end else begin  //完成一行的渲染
+          score_digit <= 0;
+          // if (!(render_x ^ X_MAX)) begin
+          //   if (!(render_y ^ Y_MAX)) begin  //完成全部背景的渲染
+          //     // next_render_state <= RENDER_SCORE;
+          //     // render_x <= SCORE_POS_X[0];
+          //     // render_y <= SCORE_POS_Y;
+
+          //     // next_render_state <= RENDER_BOSS_HP;
+          //     render_x <= 0;
+          //     render_y <= 0;
+          //   end else begin  //完成一行的渲染
+          //     render_y <= render_y + 1;
+          //     render_x <= 0;
+          //   end
+          // end else begin
+          //   render_x <= render_x + 1;
+          // end
+          if (render_x < X_MAX) begin
+            render_x <= render_x + 1;
+          end else begin
+            if (render_y < Y_MAX) begin
               render_y <= render_y + 1;
               render_x <= 0;
+            end else begin
+              // next_render_state <= RENDER_BOSS_HP;
+              render_y <= 0;
+              render_x <= 0;
             end
-          end else begin
+          end
+        end
+        RENDER_BOSS_HP: begin
+          vram_we <= ((boss_HP * H_LENGTH) / MAX_HP) > render_x;
+          // vram_we <= 0;
+          vram_rgb <= 12'h0f0;
+          score_digit <= 0;
+          // if (!(render_x ^ X_MAX)) begin
+          //   if (!(render_y ^ 1)) begin  //完成全部的渲染
+          //     // next_render_state <= RENDER_SCORE;
+          //     render_x <= SCORE_POS_X[0];
+          //     render_y <= SCORE_POS_Y;
+          //   end else begin  //完成一行的渲染
+          //     render_y <= render_y + 1;
+          //     render_x <= 0;
+          //   end
+          // end else begin
+          //   render_x <= render_x + 1;
+          // end
+          if (render_x < X_MAX) begin
             render_x <= render_x + 1;
+          end else begin
+            if (render_y < 1) begin
+              render_y <= render_y + 1;
+              render_x <= 0;
+            end else begin
+              // next_render_state <= RENDER_SCORE;
+              render_y <= SCORE_POS_Y;
+              render_x <= SCORE_POS_X[0];
+            end
           end
         end
         RENDER_SCORE: begin
@@ -534,6 +637,23 @@ module FrameGenerator #(
             render_x <= render_x + 1;
           end
         end
+        RENDER_FLAN: begin
+          vram_we <= object_alpha;
+          vram_rgb <= object_rgb;
+          score_digit <= 0;
+          if (!(render_x ^ flan_x_right)) begin
+            if (!(render_y ^ flan_y_down)) begin
+              // next_render_state <= RENDER_PLAYER;
+              render_x <= player_x_left;
+              render_y <= player_y_up;
+            end else begin
+              render_x <= flan_x_left;
+              render_y <= render_y + 1;
+            end
+          end else begin
+            render_x <= render_x + 1;
+          end
+        end
       endcase
     end
   end
@@ -559,7 +679,7 @@ module FrameGenerator #(
       .frame_clk(frame_clk),
       .rstn(rstn),
       .scroll_enabled(scroll_enabled),
-      .addr(render_addr_next),  //读取rom中的数据的地址
+      .addr(render_addr),  //读取rom中的数据的地址
       .n(n),  //每n个frame_clk
       .v(v),  //每次滚动的像素数
       .rgb_0(background_rgb),
@@ -577,6 +697,12 @@ module FrameGenerator #(
       .clka(clk),  // input wire clka
       .addra(render_addr_next),  // input wire [14 : 0] addra
       .douta(gameover_rgb)  // output wire [11 : 0] douta
+  );
+
+  Rom_Win_alpha your_instance_name (
+      .clka(clk),  // input wire clka
+      .addra(render_addr_next),  // input wire [14 : 0] addra
+      .douta(win_alpha)  // output wire [11 : 0] douta
   );
 
   // 256x128

@@ -20,6 +20,7 @@ module Player #(
     input enable_scroll,  //借用一下，实现暂停功能
     input [2:0] collision,  //碰撞信号
     input [7:0] n_count,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
+    input [1:0] game_state,
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x,  //x位置
     output [$clog2(V_LENGTH)-1:0] loc_y,  //y位置
@@ -35,7 +36,7 @@ module Player #(
   reg [4:0] ani_count = 0;  //计数器
   reg [1:0] ani_state_buf;
   reg signed [$clog2(V_LENGTH):0] signed_loc_y;
-  assign loc_y = signed_loc_y[$clog2(V_LENGTH)] ? 0 : signed_loc_y[$clog2(V_LENGTH)-1:0];
+  assign loc_y = signed_loc_y[$clog2(V_LENGTH)-1:0];
 
   assign speed_y_out = (speed_y[$clog2(V_LENGTH)] && signed_loc_y < DIV_Y) ? 0 : speed_y;
   // 在每个frame_clk上升沿更新计数器和偏移量
@@ -49,6 +50,9 @@ module Player #(
       if (!n_count) begin  // 计数器为零，移动
         signed_loc_y <= signed_loc_y + (speed_y_out >>> 1);
 
+        if(game_state==2'b11)begin
+          signed_loc_y <= 110;
+        end
         if (arrow_x) begin
           if (loc_x > (H_LENGTH - 20)) begin
             loc_x <= 20;
