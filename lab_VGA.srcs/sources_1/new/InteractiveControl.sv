@@ -7,10 +7,8 @@ module Controllor #(
 ) (
     input clk,
     input rstn,
-    input [10:0] key_event,
-    input [127:0] key_state,
-    input [7:0] ps2_data,
-    input ps2_valid,
+    input [7:0] key_asci,
+    input key_valid,
     input btnc,
     btnl,
     btnr,
@@ -69,13 +67,13 @@ module Controllor #(
 
   // 游戏输入
   GameInput game_input_inst (
-      .ps2_data(ps2_data),
-      .ps2_valid(ps2_valid),
       .btnc(btnc),
       .btnl(btnl),
       .btnr(btnr),
       .btnu(btnu),
       .btnd(btnd),
+      .key_valid(key_valid),
+      .key_asci(key_asci),
 
       .left (left),
       .right(right),

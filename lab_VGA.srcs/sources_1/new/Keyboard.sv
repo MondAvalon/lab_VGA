@@ -5,7 +5,8 @@ module Keyboard (
     ps2k_data,
     sm_bit,
     sm_seg,
-    ps2_state
+    ps2_state,
+    ps2_asci
 );
 
   input clk;  //100M时钟信号
@@ -161,10 +162,11 @@ begin
 end 
 */
 
-  reg [7:0] ps2_asci;  //接收数据的相应ASCII码
+  output reg [7:0] ps2_asci;  //接收数据的相应ASCII码
 
   always @(ps2_byte_r) begin
     case (ps2_byte_r)  //键值转换为ASCII码，这里做的比较简单，只处理字母
+      8'h29:   ps2_asci <= 8'h20;  //空格键
       8'h15:   ps2_asci <= 8'h51;  //Q
       8'h1d:   ps2_asci <= 8'h57;  //W
       8'h24:   ps2_asci <= 8'h45;  //E

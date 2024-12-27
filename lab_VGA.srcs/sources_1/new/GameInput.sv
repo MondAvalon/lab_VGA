@@ -1,11 +1,11 @@
 module GameInput (
-    input [7:0] ps2_data,
-    input ps2_valid,
     input btnc,
     btnl,
     btnr,
     btnu,
     btnd,
+    input key_valid,
+    input [7:0] key_asci,
 
     output reg left,
     output reg right,
@@ -18,11 +18,18 @@ module GameInput (
   // assign shoot = ps2_data == 8'h3B && (ps2_valid);  //J
   // assign space = ps2_data == 8'h29 && (ps2_valid);  //Space
 
+  // always @(*) begin
+  //   left  = btnl;
+  //   right = btnr;
+  //   shoot = btnu;
+  //   space = btnc;
+  // end
+
   always @(*) begin
-    left  = btnl;
-    right = btnr;
-    shoot = btnu;
-    space = btnc;
+    left  = key_asci == 8'h1C && (key_valid);  //A
+    right = key_asci == 8'h23 && (key_valid);  //D
+    shoot = key_asci == 8'h3B && (key_valid);  //J
+    space = key_asci == 8'h29 && (key_valid);  //Space
   end
 
 endmodule

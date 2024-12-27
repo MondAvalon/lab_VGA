@@ -641,17 +641,17 @@ module FrameGenerator #(
           vram_we <= object_alpha;
           vram_rgb <= object_rgb;
           score_digit <= 0;
-          if (!(render_x ^ flan_x_right)) begin
-            if (!(render_y ^ flan_y_down)) begin
-              // next_render_state <= RENDER_PLAYER;
-              render_x <= player_x_left;
-              render_y <= player_y_up;
-            end else begin
-              render_x <= flan_x_left;
-              render_y <= render_y + 1;
-            end
-          end else begin
+          if (render_x < X_MAX) begin
             render_x <= render_x + 1;
+          end else begin
+            if (render_y < Y_MAX) begin
+              render_y <= render_y + 1;
+              render_x <= 0;
+            end else begin
+              // next_render_state <= RENDER_PLAYER;
+              render_y <= player_y_up;
+              render_x <= player_x_left;
+            end
           end
         end
       endcase

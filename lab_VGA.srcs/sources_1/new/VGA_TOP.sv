@@ -23,18 +23,17 @@ module TOP (
   localparam V_LENGTH = 150;
   localparam ADDR_WIDTH = 15;
 
-  wire [ 10:0] key_event;
-  wire [127:0] key_state;
-  wire [  1:0] game_state;
+  wire [1:0] game_state;
 
-  // Keyboard
-  //   Keyboard keyboard (
-  //       .clk(CLK100MHZ),
-  //       .rstn(CPU_RESETN),
-  //       .ps2_c(PS2_CLK),
-  //       .ps2_d(PS2_DATA),
-  //       .key_event(key_event)
-  //   );
+  //   Keyboard
+  Keyboard keyboard (
+      .clk(CLK100MHZ),
+      .rst_n(CPU_RESETN),
+      .ps2k_clk(PS2_CLK),
+      .ps2k_data(PS2_DATA),
+      .ps2_state(),
+      .ps2_asci()
+  );
 
   //music
   Music audio (
@@ -56,8 +55,8 @@ module TOP (
   ) controllor (
       .clk(CLK100MHZ),
       .rstn(CPU_RESETN),
-      .key_event(key_event),
-      .key_state(key_state),
+      .key_asci(keyboard.ps2_asci),
+      .key_valid(keyboard.ps2_state),
       .btnc(BTNC),
       .btnl(BTNL),
       .btnr(BTNR),
