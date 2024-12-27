@@ -6,14 +6,14 @@ module Keyboard (
     sm_bit,
     sm_seg,
     ps2_state,
-    ps2_asci
+    ps2_byte
 );
 
   input clk;  //100M时钟信号
   input rst_n;  //复位信号
   input ps2k_clk;  //PS2接口时钟信号
   input ps2k_data;  //PS2接口数据信号
-  wire [7:0] ps2_byte;  // 1byte键值，只做简单的按键扫描
+  output wire [7:0] ps2_byte;  // 1byte键值，只做简单的按键扫描
   output ps2_state;  //键盘当前状态，ps2_state=1表示有键被按下 
   output reg [1:0] sm_bit = 'b01; //数码管显示位选择
   output reg [7:0] sm_seg; //数码管显示值
@@ -162,7 +162,7 @@ begin
 end 
 */
 
-  output reg [7:0] ps2_asci;  //接收数据的相应ASCII码
+  reg [7:0] ps2_asci;  //接收数据的相应ASCII码
 
   always @(ps2_byte_r) begin
     case (ps2_byte_r)  //键值转换为ASCII码，这里做的比较简单，只处理字母

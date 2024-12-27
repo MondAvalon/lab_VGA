@@ -16,7 +16,16 @@ module TOP (
     output [3 : 0] VGA_B,
     output AUD_PWM,
     output AUD_SD,
-    output [15:0] LED
+    output [15:0] LED,
+    output CA,
+    CB,
+    CC,
+    CD,
+    CE,
+    CF,
+    CG,
+    DP,
+    output reg [7:0] AN
 );
 
   localparam H_LENGTH = 200;
@@ -24,6 +33,9 @@ module TOP (
   localparam ADDR_WIDTH = 15;
 
   wire [1:0] game_state;
+  wire [7:0] key_asci;
+  wire key_valid;
+  wire [1:0] sm_bit;
 
   //   Keyboard
   Keyboard keyboard (
@@ -31,17 +43,30 @@ module TOP (
       .rst_n(CPU_RESETN),
       .ps2k_clk(PS2_CLK),
       .ps2k_data(PS2_DATA),
-      .ps2_state(),
-      .ps2_asci()
+      .ps2_state(key_valid),
+      .ps2_byte(key_asci),
+      .sm_bit(sm_bit),
+      .sm_seg({CA, CB, CC, CD, CE, CF, CG, DP})
   );
+
+  // Decode sm_bit to AN
+  always_comb begin
+    case (sm_bit)
+      2'b00:   AN = 8'b11111110;
+      2'b01:   AN = 8'b11111101;
+      2'b10:   AN = 8'b11111011;
+      2'b11:   AN = 8'b11110111;
+      default: AN = 8'b11111111;
+    endcase
+  end
 
   //music
   Music audio (
       .clk(CLK100MHZ),
       .rstn(CPU_RESETN),
       .start(1),
-      .speedup(2'b10),
-      .song(game_state <= 2'b11 ? game_state : 0),
+      .speedup(0),
+      .song(game_state),
       .volume(game_state <= 2'b11 ? game_state : 0),
       .G(AUD_SD),
       .B(AUD_PWM)
@@ -55,8 +80,8 @@ module TOP (
   ) controllor (
       .clk(CLK100MHZ),
       .rstn(CPU_RESETN),
-      .key_asci(keyboard.ps2_asci),
-      .key_valid(keyboard.ps2_state),
+      .key_asci(key_asci),
+      .key_valid(key_valid),
       .btnc(BTNC),
       .btnl(BTNL),
       .btnr(BTNR),

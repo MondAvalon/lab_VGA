@@ -26,10 +26,10 @@ module GameInput (
   // end
 
   always @(*) begin
-    left  = key_asci == 8'h1C && (key_valid);  //A
-    right = key_asci == 8'h23 && (key_valid);  //D
-    shoot = key_asci == 8'h3B && (key_valid);  //J
-    space = key_asci == 8'h29 && (key_valid);  //Space
+    left  = ((key_asci == 8'h1C) && key_valid)||btnl;  //A
+    right = ((key_asci == 8'h23) && key_valid)||btnr;  //D
+    shoot = ((key_asci == 8'h3B) && key_valid)||btnu;  //J
+    space = ((key_asci == 8'h29) && key_valid)||btnc;  //Space
   end
 
 endmodule

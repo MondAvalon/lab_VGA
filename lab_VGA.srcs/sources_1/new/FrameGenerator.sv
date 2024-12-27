@@ -349,7 +349,7 @@ module FrameGenerator #(
         //                     score_digit;
       end
       RENDER_FLAN: begin
-        next_render_state = !(render_x ^ flan_x_right) && !(render_y ^ flan_y_down) ? RENDER_PLAYER : RENDER_FLAN;
+        next_render_state = (!(render_x ^ flan_x_right) && !(render_y ^ flan_y_down)) ? RENDER_PLAYER : RENDER_FLAN;
       end
       default: begin
         next_render_state = IDLE;
@@ -560,8 +560,8 @@ module FrameGenerator #(
           end
         end
         RENDER_BOSS_HP: begin
-          vram_we <= ((boss_HP * H_LENGTH) / MAX_HP) > render_x;
-          // vram_we <= 0;
+          // vram_we <= ((boss_HP * H_LENGTH) / MAX_HP) > render_x;
+          vram_we <= 0;
           vram_rgb <= 12'h0f0;
           score_digit <= 0;
           // if (!(render_x ^ X_MAX)) begin
