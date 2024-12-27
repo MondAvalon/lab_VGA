@@ -14,6 +14,10 @@ module Controllor #(
     btnr,
     btnu,
     btnd,
+    input Left, 
+    Right,
+    Shoot,
+    Space,
 
     output reg [15:0] LED,
     output [3 : 0] VGA_R,
@@ -87,10 +91,10 @@ module Controllor #(
       .frame_clk(frame_clk),
       .rstn(rstn),
       //   .render_addr(render_addr),
-      .left(left),
-      .right(right),
-      .shoot(shoot),
-      .space(space),
+      .left((left || Left)),
+      .right((right || Right)),
+      .shoot((shoot || Shoot)),
+      .space((space || Space)),
 
       // output in-game object x, y, priority, color
       .game_state(game_state),
