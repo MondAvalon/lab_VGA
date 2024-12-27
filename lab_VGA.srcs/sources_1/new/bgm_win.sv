@@ -6,28 +6,40 @@ module BGM_WIN(
     input [2:0]speedup,
     output reg B
     );
-    reg [24:1]t;
-    reg [24:1]total;
+    reg [25:1]t;
+    reg [25:1]total;
     reg clk_out;
     reg [10:0]state;
     reg [8:1]m;
 
     always@(posedge clk,negedge rstn)
-        if(~rstn) total<=3125000;
+        if(~rstn) 
+            total<=3125000*2;
         // else if(speedup==1) total<=3125000;
-        else if(speedup==2) total<=3125000;
-        else total<=3125000;
+        else if(speedup==2) 
+            total<=3125000;
+        else 
+            total<=3125000*2;
 
     always@(posedge clk,negedge rstn)
-        if(~rstn) begin clk_out<=0;t<=total; end
-        else if(t==0) begin clk_out<=~clk_out;t<=total; end
-        else begin t<=t-1; end
+        if(~rstn) begin 
+            clk_out<=0;t<=total; 
+        end
+        else if(t==0) begin 
+            clk_out<=~clk_out;t<=total; 
+        end
+        else begin 
+            t<=t-1; 
+        end
 
     always@(posedge clk_out,negedge rstn)         
-        if(~rstn) state<=0;
+        if(~rstn) 
+            state<=0;
         else if(start) begin
-            if(state!=88)state<=state+1;
-            else state<=0;
+            if(state!=196)
+                state<=state+1;
+            else 
+                state<=0;
         end
 
     always@(*)
