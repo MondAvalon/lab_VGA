@@ -33,13 +33,13 @@ module TOP (
 //   );
 
   //music
-  MUSIC audio (
+  Music audio (
       .clk(CLK100MHZ),
       .rstn(CPU_RESETN),
       .start(1),
-      .speed_up(2'b10),
+      .speedup(2'b10),
       .song(game_state <= 2'b11 ? game_state : 0),
-      .volunmn(game_state <= 2'b11 ? game_state : 0),
+      .volume(game_state <= 2'b11 ? game_state : 0),
       .G(AUD_SD),
       .B(AUD_PWM)
   );

@@ -3,7 +3,7 @@ module Player #(
     parameter ADDR_WIDTH = 15,
     parameter DIV_Y = 60,
     parameter SPEED_X = 4,
-    parameter signed BUNCE_V = -22,  //回弹初速度
+    parameter signed BUNCE_V = -30,  //回弹初速度
     // parameter G_CONST = 1,  //重力加速度
     parameter addr_x = 100,  //输入起始中心x坐标
     parameter addr_y = 60,  //输入起始中心y坐标

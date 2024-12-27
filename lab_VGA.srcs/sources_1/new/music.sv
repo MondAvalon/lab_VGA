@@ -1,4 +1,4 @@
-module MUSIC(
+module Music(
     input clk,
     input start,
     input rstn,//低电平触发

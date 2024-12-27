@@ -156,7 +156,7 @@ module Game #(
   // 如果玩家y坐标小于某个数，则bg_v等于-speed_y，player_y_out等于100
   // bg_v一定为正数，否则会导致背景向上滚动
   localparam DIV_Y = 55;
-  assign bg_v = (player_y < DIV_Y) ? (speed_y<0 ? -speed_y : 0) : 0;
+  assign bg_v = (player_y < DIV_Y) ? (speed_y<0 ? (-speed_y)>>>1 : 0) : 0;
   // assign player_y_out = (player_y < DIV_Y) ? DIV_Y : player_y;
 
   Score score_inst (
