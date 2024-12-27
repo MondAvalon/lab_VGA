@@ -3,7 +3,11 @@ module TOP (
     input CPU_RESETN,
     input PS2_CLK,
     input PS2_DATA,
-    input BTNC,BTNL,BTNR,BTNU,BTND,
+    input BTNC,
+    BTNL,
+    BTNR,
+    BTNU,
+    BTND,
 
     output VGA_HS,
     output VGA_VS,
@@ -19,18 +23,18 @@ module TOP (
   localparam V_LENGTH = 150;
   localparam ADDR_WIDTH = 15;
 
-  wire [10:0] key_event;
+  wire [ 10:0] key_event;
   wire [127:0] key_state;
-  wire [1:0] game_state;
+  wire [  1:0] game_state;
 
   // Keyboard
-//   Keyboard keyboard (
-//       .clk(CLK100MHZ),
-//       .rstn(CPU_RESETN),
-//       .ps2_c(PS2_CLK),
-//       .ps2_d(PS2_DATA),
-//       .key_event(key_event)
-//   );
+  //   Keyboard keyboard (
+  //       .clk(CLK100MHZ),
+  //       .rstn(CPU_RESETN),
+  //       .ps2_c(PS2_CLK),
+  //       .ps2_d(PS2_DATA),
+  //       .key_event(key_event)
+  //   );
 
   //music
   Music audio (
@@ -43,8 +47,6 @@ module TOP (
       .G(AUD_SD),
       .B(AUD_PWM)
   );
-
-  assign AUD_SD = 1'b1;
 
   //Controllor
   Controllor #(

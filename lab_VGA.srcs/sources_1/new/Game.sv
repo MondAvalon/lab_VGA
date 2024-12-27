@@ -36,6 +36,7 @@ module Game #(
     output            [                 1:0] player_anime_state,
     output            [$clog2(H_LENGTH)-1:0] enemy_x,
     output            [$clog2(V_LENGTH)-1:0] enemy_y,
+    output            [                 9:0] enemy_HP,
     output                                   enemy_display,
     output            [$clog2(H_LENGTH)-1:0] bullet_x          [MAX_BULLET],
     output            [$clog2(V_LENGTH)-1:0] bullet_y          [MAX_BULLET],
@@ -109,8 +110,8 @@ module Game #(
   localparam GAME_OVER = 2'b10;
   localparam GAME_WIN = 2'b11;
 
-  localparam PLAY_READY = 2'b00;
-  localparam PLAY_GO = 2'b01;
+  // localparam PLAY_READY = 2'b00;
+  // localparam PLAY_GO = 2'b01;
 
   reg [1:0] next_game_state;
 
@@ -138,6 +139,8 @@ module Game #(
         GAME_PLAYING: begin
           if (collision[2]) begin
             next_game_state <= GAME_OVER;
+          end else if (enemy_display == 0) begin
+            next_game_state <= GAME_WIN;
           end else begin
             next_game_state <= GAME_PLAYING;
           end
@@ -149,6 +152,13 @@ module Game #(
             next_game_state <= GAME_OVER;
           end
         end
+        GAME_WIN: begin
+          if (right) begin
+            next_game_state <= GAME_MENU;
+          end else begin
+            next_game_state <= GAME_WIN;
+          end
+        end
       endcase
     end
   end
@@ -156,7 +166,7 @@ module Game #(
   // 如果玩家y坐标小于某个数，则bg_v等于-speed_y，player_y_out等于100
   // bg_v一定为正数，否则会导致背景向上滚动
   localparam DIV_Y = 55;
-  assign bg_v = (player_y < DIV_Y) ? (speed_y<0 ? (-speed_y)>>>1 : 0) : 0;
+  assign bg_v = (player_y < DIV_Y) ? (speed_y < 0 ? (-speed_y) >>> 1 : 0) : 0;
   // assign player_y_out = (player_y < DIV_Y) ? DIV_Y : player_y;
 
   Score score_inst (
@@ -164,7 +174,7 @@ module Game #(
       .frame_clk(frame_clk),
       .rstn(rstn),
       .game_state(game_state),
-      .v(bg_v),
+      .v(bg_v + bullet_inst.collision * 8),
       .n_count(n_count),
 
       .score(score),
@@ -172,7 +182,7 @@ module Game #(
   );
 
   Player #(
-    .DIV_Y(DIV_Y)
+      .DIV_Y(DIV_Y)
   ) player_inst (
       .clk(clk),
       .frame_clk(frame_clk),
@@ -183,6 +193,7 @@ module Game #(
       .enable_scroll(enable_scroll),
       .collision(collision),
       .n_count(n_count),
+      .game_state(game_state),
 
       .loc_x(player_x),
       .loc_y(player_y),
@@ -235,9 +246,11 @@ module Game #(
       .enable_scroll(enable_scroll),
       .n_count(n_count),
       .bullet_collision(bullet_inst.collision),
+      .game_state(game_state),
 
       .loc_x  (enemy_x),
       .loc_y  (enemy_y),
+      .HP     (enemy_HP),
       .display(enemy_display)
   );
 
@@ -262,6 +275,7 @@ module Game #(
     n = 3;
     bg_v = 1;
     collision = 0;
+    game_state = GAME_MENU;
   end
 
 endmodule
