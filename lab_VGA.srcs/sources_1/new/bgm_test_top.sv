@@ -23,7 +23,7 @@ module MUSIC_TOP (
       .rstn(CPU_RESETN),
       .start(1),
       .speedup(0),
-      .song(1),
+      .song(2'd1),
       .volume(0),
       .G(AUD_SD),
       .B(AUD_PWM)
