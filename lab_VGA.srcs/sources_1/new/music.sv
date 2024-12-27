@@ -32,7 +32,7 @@ initial begin
     G = 1'b1;
 end
 
-wire menu,bgm,fail,win;
+wire beg1n,bgm,fail,win;
 reg begin_bgm,bgm_bgm,bgm_fail,bgm_win;
 BGM BGM_BGM(
     .clk(clk),
@@ -48,7 +48,7 @@ BGM_BEGIN beginbgm(
     .rstn(begin_bgm),
     .frac(frac),      
     .speedup(speedup),
-    .B(menu)
+    .B(beg1n)
     );
 BGM_FAIL FAIL(
     .clk(clk),
@@ -69,7 +69,7 @@ BGM_WIN WIN(
 always @(posedge clk) begin
     case (song)
         2'd0: begin
-            B<=menu;
+            B<=beg1n;
             bgm_bgm<=0;
             bgm_fail<=0;
             begin_bgm<=1;
