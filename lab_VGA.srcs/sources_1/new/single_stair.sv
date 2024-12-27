@@ -17,7 +17,7 @@ module SingleStair#(
     output reg [1:0] mark //台阶分类，00为不显示，01为普通台阶，10为特殊台阶
 ); 
 wire [7:0] count_y;  // 计数器
-reg  [2:0] x_offset;  // x轴偏移量
+reg  [4:0] x_offset;  // x轴偏移量
 reg signed [7:0] generate_cd;  // 生成台阶的计数器
 reg signed [31:0] randnum;
 localparam X_INIT = 16 + (NUM * 997)%(H_LENGTH-32);
@@ -35,17 +35,17 @@ always @(posedge frame_clk) begin
         mark <= 0;
     end else begin
         if (loc_y > 146) begin
-            loc_x <= 100 + randnum % 75;
+            loc_x <= 100 + randnum % 70;
             loc_y <= 3;
             mark <= 0;
             generate_cd <= randnum % 17;
         end else if (count_y == 0) begin  // 计数器为零，y轴移动
             loc_y <= loc_y + v;
             if(mark == 2'b10) begin
-                if(x_offset < 4) begin
+                if(x_offset < 15) begin
                     loc_x <= loc_x + 1;
                     x_offset <= x_offset + 1;
-                end else if(x_offset < 8) begin
+                end else if(x_offset < 30) begin
                     loc_x <= loc_x - 1;
                     x_offset <= x_offset + 1;
                 end else begin

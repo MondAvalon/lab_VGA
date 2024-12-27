@@ -23,7 +23,8 @@ module Controllor #(
     output [3 : 0] VGA_B,
     output VGA_HS,
     output VGA_VS,
-    output [1:0] game_state
+    output [1:0] game_state,
+    output clk_o
 );
   wire pclk;
   wire clk_25mhz;
@@ -31,7 +32,6 @@ module Controllor #(
   wire [11:0] rdata;
   wire [ADDR_WIDTH-1:0] raddr;
   wire [ADDR_WIDTH-1:0] render_addr;
-  wire [1:0] game_state;
   wire [15:0] score;
   wire [15:0] high_score;
   wire left, right, shoot, space;
@@ -39,6 +39,7 @@ module Controllor #(
   wire [$clog2(V_LENGTH)-1:0] boss_y;
   wire frame;
   wire frame_clk;
+  assign clk_o = pclk;
 
   // reg clk_72hz = 1;
   // reg [15:0] counter_72hz = 0;

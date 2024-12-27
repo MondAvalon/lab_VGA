@@ -68,7 +68,8 @@ module TOP (
       .VGA_B(VGA_B),
       .VGA_HS(VGA_HS),
       .VGA_VS(VGA_VS),
-      .game_state(game_state)
+      .game_state(game_state),
+      .clk_o()
   );
 
 endmodule
