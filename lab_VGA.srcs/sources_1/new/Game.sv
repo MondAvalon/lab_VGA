@@ -130,7 +130,7 @@ module Game #(
     end else begin
       case (game_state)
         GAME_MENU: begin
-          if (left) begin
+          if (shoot) begin
             next_game_state <= GAME_PLAYING;
           end else begin
             next_game_state <= GAME_MENU;
@@ -153,7 +153,7 @@ module Game #(
           end
         end
         GAME_WIN: begin
-          if (right) begin
+          if (space) begin
             next_game_state <= GAME_MENU;
           end else begin
             next_game_state <= GAME_WIN;

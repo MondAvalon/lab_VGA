@@ -28,7 +28,7 @@ module Mob #(
 
         if (arrow) begin
           if (loc_x > (H_LENGTH - 30)) begin
-            loc_x <= H_LENGTH - 20;
+            loc_x <= H_LENGTH - 30;
             arrow <= 0;
           end else begin
             loc_x <= loc_x + SPEED_X;
@@ -36,7 +36,7 @@ module Mob #(
           end
         end else begin
           if (loc_x < 30) begin
-            loc_x <= 20;
+            loc_x <= 30;
             arrow <= 1;
           end else begin
             loc_x <= loc_x - SPEED_X;

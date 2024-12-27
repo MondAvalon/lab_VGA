@@ -15,8 +15,8 @@ module Keyboard (
   input ps2k_data;  //PS2接口数据信号
   output wire [7:0] ps2_byte;  // 1byte键值，只做简单的按键扫描
   output ps2_state;  //键盘当前状态，ps2_state=1表示有键被按下 
-  output reg [1:0] sm_bit = 'b01; //数码管显示位选择
-  output reg [7:0] sm_seg; //数码管显示值
+  output reg [1:0] sm_bit = 'b01;  //数码管显示位选择
+  output reg [7:0] sm_seg;  //数码管显示值
   //------------------------------------------
   reg ps2k_clk_r0, ps2k_clk_r1, ps2k_clk_r2;  //ps2k_clk状态寄存器
   //wire pos_ps2k_clk; 	// ps2k_clk上升沿标志位
@@ -223,17 +223,19 @@ end
   //==================state select================
   reg [3:0] Num;
   always @(posedge clk3) begin
-    case (sm_bit)
-      'b01: begin
-        Num <= ps2_byte[7:4];
-        sm_bit <= 'b10;
-      end
-      'b10: begin
-        Num <= ps2_byte[3:0];
-        sm_bit <= 'b01;
-      end
-      default: Num <= 'b0;
-    endcase
+    if (ps2_state==1) begin
+      case (sm_bit)
+        'b01: begin
+          Num <= ps2_byte[7:4];
+          sm_bit <= 'b10;
+        end
+        'b10: begin
+          Num <= ps2_byte[3:0];
+          sm_bit <= 'b01;
+        end
+        default: Num <= 'b0;
+      endcase
+    end
     /*if(sm_bit=='b01)
 	   begin
 			Num<=ps2_byte[3:0];
