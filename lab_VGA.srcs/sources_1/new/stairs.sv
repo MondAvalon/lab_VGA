@@ -8,6 +8,7 @@ module Stairs#(
     input clk,
     input frame_clk,
     input rstn,
+    input [1:0] game_state,
     // input [3:0] loc,        //台阶编号
     input enable_scroll,   //借用一下，实现暂停功能
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
@@ -39,6 +40,7 @@ generate
             .clk(clk),
             .frame_clk(frame_clk),
             .rstn(rstn),
+            .game_state(game_state),
             .n(n),
             .v(v),
             .enable_scroll(enable_scroll),

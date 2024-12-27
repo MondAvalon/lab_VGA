@@ -7,6 +7,7 @@ module SingleStair#(
     input clk,
     input frame_clk,
     input rstn,
+    input [1:0] game_state,
     input enable_scroll,    //借用一下，实现暂停功能
     // input [3:0]   num,             // 台阶数字编号
     input [7:0] n,         // 每n个frame_clk更新一次offset，图片向下滚动速度为每秒72/n个像素,即刷新率
@@ -33,12 +34,12 @@ always @(posedge frame_clk) begin
         loc_x <= X_INIT;
         loc_y <= Y_INIT;
         mark <= 0;
-    end else begin
+    end else if(game_state==2'b01) begin
         if (loc_y > 146) begin
             loc_x <= 100 + randnum[31:4] % 71;
             loc_y <= 3;
             mark <= 0;
-            generate_cd <= randnum[29:2] % 97;
+            generate_cd <= randnum[29:2] % 987;
         end else if (count_y == 0) begin  // 计数器为零，y轴移动
             loc_y <= loc_y + v;
             if(mark == 2'b10) begin
@@ -63,6 +64,12 @@ always @(posedge frame_clk) begin
                 loc_y <= 3;
             end
         end
+    end else begin
+        loc_x <= X_INIT;
+        loc_y <= Y_INIT;
+        mark <= 1;
+        generate_cd <= 0;
+        x_offset <= 0;
     end
 end
 

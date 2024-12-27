@@ -17,6 +17,7 @@ module Player #(
     input left,
     input right,
     input shoot,
+    input space,
     input enable_scroll,  //借用一下，实现暂停功能
     input [2:0] collision,  //碰撞信号
     input [7:0] n_count,         // 每n个frame_clk更新一次offset，物体向下滚动速度为每秒72/n个像素,即刷新率
@@ -41,7 +42,7 @@ module Player #(
   assign speed_y_out = (speed_y[$clog2(V_LENGTH)] && signed_loc_y < DIV_Y) ? 0 : speed_y;
   // 在每个frame_clk上升沿更新计数器和偏移量
   always @(posedge frame_clk) begin
-    if (!rstn) begin
+    if (!rstn || (game_state == 2'b00)) begin
       loc_x <= addr_x;
       signed_loc_y <= addr_y;
       //   Speed_y <= 0;
@@ -50,8 +51,10 @@ module Player #(
       if (!n_count) begin  // 计数器为零，移动
         signed_loc_y <= signed_loc_y + (speed_y_out >>> 1);
 
-        if(game_state==2'b11)begin
-          signed_loc_y <= 110;
+        if (game_state == 2'b11) begin
+          if (signed_loc_y >= 120) begin
+            signed_loc_y <= 120;
+          end
         end
         if (arrow_x) begin
           if (loc_x > (H_LENGTH - 20)) begin
@@ -123,10 +126,13 @@ module Player #(
   always @(posedge frame_clk) begin
     if (!rstn) begin
       speed_y <= 0;
-    end else begin
-      if ((collision[1] || (signed_loc_y > V_LENGTH - 20)) && speed_y > 0) begin
-        speed_y <= -speed_y-4;
-        // speed_y <= BUNCE_V;
+    end else if (game_state == 2'b01) begin
+      if ((collision[1]) && speed_y > 0) begin
+        if (collision[0]) begin
+          speed_y <= BUNCE_V;
+        end else begin
+          speed_y <= -speed_y - 4;
+        end
       end else if (!n_count) begin
         if (speed_y == 18) begin
           speed_y <= speed_y;
@@ -134,6 +140,18 @@ module Player #(
           speed_y <= speed_y + 1;
         end
       end
+    end else if (game_state == 2'b11) begin
+      if (space) begin
+        speed_y <= -10;
+      end else if (!n_count) begin
+        if (speed_y == 18) begin
+          speed_y <= speed_y;
+        end else begin
+          speed_y <= speed_y + 1;
+        end
+      end
+    end else begin
+      speed_y <= 0;
     end
   end
 

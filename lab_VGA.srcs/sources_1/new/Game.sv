@@ -21,6 +21,7 @@ module Game #(
     input right,
     input shoot,
     input space,
+    input r,
 
     output reg        [                 1:0] game_state,                      //游戏状态
     // output in-game object x, y, priority
@@ -74,9 +75,9 @@ module Game #(
       for (int i = 0; i < MAX_STAIR; i = i + 1) begin
         if ((player_y > (stair_y[i] - 17))       && (player_y < (stair_y[i] - 7))&&
             (player_x > (stair_x[i]-STAIR_X/2)) && (player_x < (stair_x[i]+STAIR_X/2))) begin
-          if (stair_display[i] == 2'b10) begin //判断台阶种类，目前只有一种特殊台阶
+          if (stair_display[i] == 2'b10) begin //加速台阶
             collision <= 3'b011;
-          end else if (stair_display[i] == 2'b01) begin
+          end else if (stair_display[i] == 2'b01) begin //普通台阶
             collision <= 3'b010;
           end
         end
@@ -95,9 +96,9 @@ module Game #(
     // if (((player_y-Y_WHITH/2)==(enemy_y+MOB_Y))&&((player_x+X_WHITH/2)==(enemy_x-MOB_X))) begin //敌机逻辑右下
     //   collision[2] <= 1;
     // end
-    // if (player_y == (V_LENGTH - 15)) begin  //触底逻辑
-    //   collision[2] <= 1;
-    // end
+    if (player_y > (V_LENGTH - 12)) begin  //触底逻辑
+      collision[2] <= 1;
+    end
     if (collision) begin
       collision <= 3'b000;
     end
@@ -130,7 +131,7 @@ module Game #(
     end else begin
       case (game_state)
         GAME_MENU: begin
-          if (shoot) begin
+          if (space) begin
             next_game_state <= GAME_PLAYING;
           end else begin
             next_game_state <= GAME_MENU;
@@ -146,14 +147,14 @@ module Game #(
           end
         end
         GAME_OVER: begin
-          if (right) begin
+          if (r) begin
             next_game_state <= GAME_MENU;
           end else begin
             next_game_state <= GAME_OVER;
           end
         end
         GAME_WIN: begin
-          if (space) begin
+          if (r) begin
             next_game_state <= GAME_MENU;
           end else begin
             next_game_state <= GAME_WIN;
@@ -174,7 +175,7 @@ module Game #(
       .frame_clk(frame_clk),
       .rstn(rstn),
       .game_state(game_state),
-      .v(bg_v + bullet_inst.collision * 8),
+      .v(bg_v + bullet_inst.collision * 4),
       .n_count(n_count),
 
       .score(score),
@@ -190,6 +191,7 @@ module Game #(
       .left(left),
       .right(right),
       .shoot(shoot),
+      .space(space),
       .enable_scroll(enable_scroll),
       .collision(collision),
       .n_count(n_count),
@@ -232,6 +234,7 @@ module Game #(
       .frame_clk(frame_clk),
       .rstn(rstn),
       .enable_scroll(enable_scroll),
+      .game_state(game_state),
       .n(n),
       .v(bg_v),
       .state_x(stair_x),
