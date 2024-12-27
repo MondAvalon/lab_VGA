@@ -21,6 +21,7 @@ module TOP (
 
   wire [10:0] key_event;
   wire [127:0] key_state;
+  wire [1:0] game_state;
 
   // Keyboard
 //   Keyboard keyboard (
@@ -31,14 +32,16 @@ module TOP (
 //       .key_event(key_event)
 //   );
 
-  //Audio
-  Audio audio (
+  //music
+  MUSIC audio (
       .clk(CLK100MHZ),
       .rstn(CPU_RESETN),
       .start(1),
-      .speed_control(0),
-
-      .audio_pwm(AUD_PWM)
+      .speed_up(2'b10),
+      .song(game_state <= 2'b11 ? game_state : 0),
+      .volunmn(game_state <= 2'b11 ? game_state : 0),
+      .G(AUD_SD),
+      .B(AUD_PWM)
   );
 
   assign AUD_SD = 1'b1;
@@ -64,7 +67,8 @@ module TOP (
       .VGA_G(VGA_G),
       .VGA_B(VGA_B),
       .VGA_HS(VGA_HS),
-      .VGA_VS(VGA_VS)
+      .VGA_VS(VGA_VS),
+      .game_state(game_state)
   );
 
 endmodule
