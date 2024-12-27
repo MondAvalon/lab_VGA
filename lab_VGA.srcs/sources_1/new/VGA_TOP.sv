@@ -36,8 +36,9 @@ module TOP (
   wire [7:0] key_asci;
   wire key_valid;
   wire [1:0] sm_bit;
+  wire w,a,s,d,z,x,q,o,r,shift,enter,esc,up,down,left,right,space;//Key_board模块对应
 
-  //   Keyboard
+  //   Keyboard(暂时弃置)
   Keyboard keyboard (
       .clk(CLK100MHZ),
       .rst_n(CPU_RESETN),
@@ -47,6 +48,31 @@ module TOP (
       .ps2_byte(key_asci),
       .sm_bit(sm_bit),
       .sm_seg({CA, CB, CC, CD, CE, CF, CG, DP})
+  );
+
+  //新版键盘输入
+  keyboard_output KEYBOARDOUT(
+    .clk(clk),
+    .rstn(rstn),
+    .ps2_clk(PS2_CLK),
+    .ps2_data(PS2_DATA),
+    .w(w),
+    .a(a),
+    .s(s),
+    .d(d),
+    .z(z),
+    .x(x),
+    .q(q),
+    .o(o),
+    .r(r),
+    .shift(shift),
+    .enter(enter),
+    .esc(esc),
+    .up(up),
+    .down(down),
+    .left(left),
+    .right(right),
+    .space(space)
   );
 
   // Decode sm_bit to AN
@@ -80,13 +106,17 @@ module TOP (
   ) controllor (
       .clk(CLK100MHZ),
       .rstn(CPU_RESETN),
-      .key_asci(key_asci),
-      .key_valid(key_valid),
+      .key_asci(key_asci),//键盘输入(暂时弃置)
+      .key_valid(key_valid),//键盘输入使能(暂时弃置)
       .btnc(BTNC),
       .btnl(BTNL),
       .btnr(BTNR),
       .btnu(BTNU),
       .btnd(BTND),
+      .Right(right),
+      .Left(left),
+      .Shoot(shoot),
+      .Space(space),
 
       .LED(LED),
       .VGA_R(VGA_R),
