@@ -14,12 +14,13 @@ module SingleStair#(
 
     output reg [$clog2(H_LENGTH)-1:0] loc_x, //x位置
     output reg [$clog2(V_LENGTH)-1:0] loc_y, //y位置
-    output reg [1:0] mark //台阶分类
+    output reg [1:0] mark //台阶分类，00为不显示，01为普通台阶，10为特殊台阶
 ); 
 wire [7:0] count_y;  // 计数器
+reg [7:0] generate_cd;  // 生成台阶的计数器
 reg signed [31:0] randnum;
-localparam X_INIT = NUM * 11;
-localparam Y_INIT = (NUM * 999+5)%V_LENGTH;
+localparam X_INIT = 16 + (NUM * 997)%(H_LENGTH-32);
+localparam Y_INIT = 2 + (NUM * 997)%(V_LENGTH-2);
 
 always @(posedge frame_clk) begin
     randnum <= {randnum[30:0], randnum[31]^randnum[27]};
@@ -33,14 +34,19 @@ always @(posedge frame_clk) begin
         mark <= 0;
     end else begin
         if (loc_y > 146) begin
-            loc_x <= 100 + randnum % 70;
-            loc_y <= loc_y - 146;
-            mark <= randnum[31:27]%3;
-        end
-        else begin
-        if (count_y == 0) begin  // 计数器为零，y轴移动
+            loc_x <= 100 + randnum % 75;
+            loc_y <= 3;
+            mark <= 0;
+            generate_cd <= randnum % 17;
+        end else if (count_y == 0) begin  // 计数器为零，y轴移动
             loc_y <= loc_y + v;
-        end
+
+            if (generate_cd > 0) begin
+                generate_cd <= generate_cd - 1;
+            end else if (mark == 0) begin
+                mark <= 1 + randnum[31];
+                loc_y <= 3;
+            end
         end
     end
 end
@@ -61,6 +67,7 @@ initial begin //初始化
     loc_y = Y_INIT;
     mark = 1;
     randnum = NUM * 32'h01234567;
+    generate_cd = 0;
 end
 
 endmodule

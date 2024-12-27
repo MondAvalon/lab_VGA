@@ -107,6 +107,7 @@ module Game #(
   localparam GAME_MENU = 2'b00;
   localparam GAME_PLAYING = 2'b01;
   localparam GAME_OVER = 2'b10;
+  localparam GAME_WIN = 2'b11;
 
   localparam PLAY_READY = 2'b00;
   localparam PLAY_GO = 2'b01;
@@ -154,7 +155,7 @@ module Game #(
 
   // 如果玩家y坐标小于某个数，则bg_v等于-speed_y，player_y_out等于100
   // bg_v一定为正数，否则会导致背景向上滚动
-  localparam DIV_Y = 60;
+  localparam DIV_Y = 55;
   assign bg_v = (player_y < DIV_Y) ? (speed_y<0 ? -speed_y : 0) : 0;
   // assign player_y_out = (player_y < DIV_Y) ? DIV_Y : player_y;
 

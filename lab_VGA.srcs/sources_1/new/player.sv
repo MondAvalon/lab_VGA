@@ -121,10 +121,10 @@ module Player #(
       speed_y <= 0;
     end else begin
       if ((collision[1] || (signed_loc_y > V_LENGTH - 20)) && speed_y > 0) begin
-        // speed_y <= -speed_y;
-        speed_y <= BUNCE_V;
+        speed_y <= -speed_y-2;
+        // speed_y <= BUNCE_V;
       end else if (!n_count) begin
-        if (speed_y == 14) begin
+        if (speed_y == 18) begin
           speed_y <= speed_y;
         end else begin
           speed_y <= speed_y + 1;
