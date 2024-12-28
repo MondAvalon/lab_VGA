@@ -13,6 +13,7 @@ module Score (
 
   // wire [7:0] count;  // 计数器
   reg [13:0] score_dec;
+  reg [13:0] high_score_dec;
 
   initial begin
     score = 16'h0000;
@@ -39,16 +40,23 @@ module Score (
     end
   end
 
-  always_comb begin
+  always @(*) begin
     score[3:0]   = score_dec % 10;
     score[7:4]   = (score_dec / 10) % 10;
     score[11:8]  = (score_dec / 100) % 10;
     score[15:12] = (score_dec / 1000) % 10;
 
-    if (score > high_score) begin
-      high_score = score;
-    end else begin
-      high_score = high_score;
+    high_score[3:0]   = high_score_dec % 10;
+    high_score[7:4]   = (high_score_dec / 10) % 10;
+    high_score[11:8]  = (high_score_dec / 100) % 10;
+    high_score[15:12] = (high_score_dec / 1000) % 10;
+  end
+
+  always @(posedge clk) begin
+    if (!rstn) begin
+      high_score_dec <= 14'd0;
+    end else if (score_dec > high_score_dec) begin
+      high_score_dec <= score_dec;
     end
   end
 

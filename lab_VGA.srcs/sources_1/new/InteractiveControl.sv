@@ -7,17 +7,18 @@ module Controllor #(
 ) (
     input clk,
     input rstn,
-    input [7:0] key_asci,
-    input key_valid,
+    // input [7:0] key_asci,
+    // input key_valid,
     input btnc,
     btnl,
     btnr,
     btnu,
     btnd,
-    input Left, 
+    input Left,
     Right,
     Shoot,
     Space,
+    R,
 
     output reg [15:0] LED,
     output [3 : 0] VGA_R,
@@ -41,24 +42,6 @@ module Controllor #(
   wire frame_clk;
   assign clk_o = pclk;
 
-  // reg clk_72hz = 1;
-  // reg [15:0] counter_72hz = 0;
-  // localparam DIVIDER_72HZ = 16'd34722;  // 5MHz / 72Hz / 2
-
-  // always @(posedge clk_5mhz) begin
-  //   if (!rstn) begin
-  //     counter_72hz <= 0;
-  //     clk_72hz <= 0;
-  //   end else begin
-  //     if (counter_72hz >= DIVIDER_72HZ - 1) begin
-  //       counter_72hz <= 0;
-  //       clk_72hz <= ~clk_72hz;
-  //     end else begin
-  //       counter_72hz <= counter_72hz + 1;
-  //     end
-  //   end
-  // end
-
   // 像素时钟
   pclk pixel_clock_inst (
       .clk_out1(pclk),
@@ -76,8 +59,6 @@ module Controllor #(
       .btnr(btnr),
       .btnu(btnu),
       .btnd(btnd),
-      .key_valid(key_valid),
-      .key_asci(key_asci),
 
       .left (left),
       .right(right),
@@ -95,6 +76,7 @@ module Controllor #(
       .right((right || Right)),
       .shoot((shoot || Shoot)),
       .space((space || Space)),
+      .r(R),
 
       // output in-game object x, y, priority, color
       .game_state(game_state),
