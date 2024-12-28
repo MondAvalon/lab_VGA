@@ -52,7 +52,7 @@ module Player #(
         signed_loc_y <= signed_loc_y + (speed_y_out >>> 1);
 
         if (game_state == 2'b11) begin
-          if (signed_loc_y >= 120) begin
+          if (signed_loc_y >= 120 && (!space)) begin
             signed_loc_y <= 120;
           end
         end
@@ -144,7 +144,9 @@ module Player #(
       if (space) begin
         speed_y <= -10;
       end else if (!n_count) begin
-        if (speed_y == 18) begin
+        if (signed_loc_y >= 120) begin
+          speed_y <= 0;
+        end else if (speed_y == 18) begin
           speed_y <= speed_y;
         end else begin
           speed_y <= speed_y + 1;

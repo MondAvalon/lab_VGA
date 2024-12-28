@@ -101,8 +101,8 @@ module FrameGenerator #(
 
   assign flan_x_left = player_x - 14;
   assign flan_x_right = player_x + 15;
-  assign flan_y_up = player_y - 52;
-  assign flan_y_down = player_y - 17;
+  assign flan_y_up = (player_y - 52) < player_y ? player_y - 52 : 1;
+  assign flan_y_down = flan_y_up + 35;
 
   assign bullet_x_left = bullet_x[bullet_index] - 4;
   assign bullet_x_right = bullet_x[bullet_index] + 4;
