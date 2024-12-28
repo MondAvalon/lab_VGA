@@ -31,6 +31,16 @@ module Player #(
 );
   localparam X_WHITH = 30;  //物体宽
   localparam Y_WHITH = 36;  //物体长
+  reg [7:0] div_y = 0;
+
+
+  always @(posedge clk) begin
+    if (game_state == 2'b11) begin //GAME_WIN
+      div_y <= DIV_Y - 10;
+    end else begin
+      div_y <= DIV_Y;
+    end
+  end
 
   reg arrow_x;  //判断左右移动方向，取1为右，0为左
   reg [3:0] speed_x;
@@ -39,7 +49,7 @@ module Player #(
   reg signed [$clog2(V_LENGTH):0] signed_loc_y;
   assign loc_y = signed_loc_y[$clog2(V_LENGTH)-1:0];
 
-  assign speed_y_out = (speed_y[$clog2(V_LENGTH)] && signed_loc_y < DIV_Y) ? 0 : speed_y;
+  assign speed_y_out = (speed_y[$clog2(V_LENGTH)] && signed_loc_y < div_y) ? 0 : speed_y;
   // 在每个frame_clk上升沿更新计数器和偏移量
   always @(posedge frame_clk) begin
     if (!rstn || (game_state == 2'b00)) begin
@@ -142,7 +152,7 @@ module Player #(
       end
     end else if (game_state == 2'b11) begin
       if (space) begin
-        speed_y <= -16;
+        speed_y <= -12;
       end else if (!n_count) begin
         if (signed_loc_y >= 120) begin
           speed_y <= 0;
