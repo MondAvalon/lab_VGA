@@ -142,7 +142,7 @@ module Player #(
       end
     end else if (game_state == 2'b11) begin
       if (space) begin
-        speed_y <= -10;
+        speed_y <= -16;
       end else if (!n_count) begin
         if (signed_loc_y >= 120) begin
           speed_y <= 0;
