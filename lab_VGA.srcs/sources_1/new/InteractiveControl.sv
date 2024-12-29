@@ -7,8 +7,6 @@ module Controllor #(
 ) (
     input clk,
     input rstn,
-    // input [7:0] key_asci,
-    // input key_valid,
     input btnc,
     btnl,
     btnr,

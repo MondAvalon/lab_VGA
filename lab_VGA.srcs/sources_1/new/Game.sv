@@ -14,7 +14,6 @@ module Game #(
     input clk,
     input rstn,
     input frame_clk,
-    // input [ADDR_WIDTH-1:0] render_addr,  //渲染坐标/地址
 
     // 游戏键盘输入
     input left,
@@ -25,7 +24,6 @@ module Game #(
 
     output reg        [                 1:0] game_state,                      //游戏状态
     // output in-game object x, y, priority
-    //    input      [$clog2(MAX_BULLET)-1:0] bullet_lookup_i,
     output            [                15:0] score,
     output            [                15:0] high_score,
     output reg                               enable_scroll,
@@ -75,9 +73,9 @@ module Game #(
       for (int i = 0; i < MAX_STAIR; i = i + 1) begin
         if ((player_y > (stair_y[i] - 17))       && (player_y < (stair_y[i] - 7))&&
             (player_x > (stair_x[i]-STAIR_X/2)) && (player_x < (stair_x[i]+STAIR_X/2))) begin
-          if (stair_display[i] == 2'b10) begin //加速台阶
+          if (stair_display[i] == 2'b10) begin  //加速台阶
             collision <= 3'b011;
-          end else if (stair_display[i] == 2'b01) begin //普通台阶
+          end else if (stair_display[i] == 2'b01) begin  //普通台阶
             collision <= 3'b010;
           end
         end
