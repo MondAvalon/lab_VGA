@@ -10,4 +10,4 @@ Pudding Jump（布丁跳跳）（灵感来自涂鸦跳跳）
 
 ## 视频展示
 
-【数字电路：FPGA游戏开发 红魔馆的布丁日常】 https://www.bilibili.com/video/BV1aMrCYQEmc
+【数字电路：FPGA游戏开发 红魔馆的布丁日常】 https://www.bilibili.com/video/BV1aMrCYQEmc/?share_source=copy_web&vd_source=ea3a3f2aa4103d4e7cd3a5be9dc6128d
